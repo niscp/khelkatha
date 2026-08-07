@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "नन्ही दुनिया — Hindi rhyme adventures for little fingers",
-  description: "Tap, sing, count and play through original adventures inspired by beloved Hindi childhood rhymes.",
+  title: "KhelKatha — Press, play and learn with animal friends",
+  description: "An animated Hindi-English animal sound playground for children ages 1–7.",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
