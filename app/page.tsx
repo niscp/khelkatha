@@ -20,8 +20,9 @@ const animals = [
   { key: "H", emoji: "🦜", name: "Tota", hindi: "तोता", sound: "चीं-चीं!", colour: "#69b84a", x: "91%", audio: "parrot.ogg" },
 ];
 
-type ToddlerGame = "smash" | "bubbles" | "ball" | "scratch" | "piano" | "catch" | "hello" | "peek" | "dance";
+type ToddlerGame = "smash" | "bubbles" | "ball" | "scratch" | "piano" | "catch" | "family" | "hello" | "peek" | "dance";
 type Burst = { id: number; x: number; y: number; animal: number; kind: "animal" | "spark" };
+type FamilyMember = { name: string; photo: string };
 
 export default function Home() {
   const [age, setAge] = useState<AgeGroup | null>(null);
@@ -40,10 +41,20 @@ export default function Home() {
   const [scratchMarks, setScratchMarks] = useState<{ id: number; x: number; y: number }[]>([]);
   const [birdPosition, setBirdPosition] = useState({ x: 68, y: 42 });
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showFamily, setShowFamily] = useState(false);
+  const [childName, setChildName] = useState("");
+  const [nickname, setNickname] = useState("");
+  const [favouriteColour, setFavouriteColour] = useState("#ef6654");
+  const [family, setFamily] = useState<FamilyMember[]>([]);
+  const [familyReveal, setFamilyReveal] = useState<number | null>(null);
+  const [praiseAudio, setPraiseAudio] = useState("");
+  const [isRecording, setIsRecording] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const burstId = useRef(0);
   const lastTrail = useRef(0);
   const markId = useRef(0);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const recordingChunks = useRef<Blob[]>([]);
 
   useEffect(() => {
     const saved = window.localStorage.getItem("khelkatha-age") as AgeGroup | null;
@@ -55,6 +66,14 @@ export default function Home() {
       }
     }
     else setShowAge(true);
+    try {
+      const profile = JSON.parse(window.localStorage.getItem("khelkatha-family") || "null");
+      if (profile) {
+        setChildName(profile.childName || ""); setNickname(profile.nickname || "");
+        setFavouriteColour(profile.favouriteColour || "#ef6654"); setFamily(profile.family || []);
+        setPraiseAudio(profile.praiseAudio || "");
+      }
+    } catch { /* start with an empty private profile */ }
   }, []);
 
   useEffect(() => {
@@ -143,7 +162,7 @@ export default function Home() {
     setRevealed(null);
     const prompts: Record<ToddlerGame, string> = {
       smash: "कहीं भी छूओ!", bubbles: "बुलबुले फोड़ो!", ball: "गेंद को घुमाओ!",
-      scratch: "उंगली घुमाओ!", piano: "सुर बजाओ!", catch: "तोता पकड़ो!",
+      scratch: "उंगली घुमाओ!", piano: "सुर बजाओ!", catch: "तोता पकड़ो!", family: "कौन छुपा है?",
       hello: "जानवर को छूओ!", peek: "पत्ते के पीछे कौन है?", dance: "किसको नचाएँ?",
     };
     setMessage(prompts[value]);
@@ -167,6 +186,47 @@ export default function Home() {
     } catch { /* animal audio still plays */ }
   }
 
+  function saveFamily() {
+    window.localStorage.setItem("khelkatha-family", JSON.stringify({ childName, nickname, favouriteColour, family, praiseAudio }));
+    setShowFamily(false);
+    setMessage(`${nickname || childName || "बच्चा"}, खेल शुरू! ★`);
+  }
+
+  function addFamilyPhoto(file: File | undefined, index: number) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const image = new Image();
+      image.onload = () => {
+        const canvas = document.createElement("canvas"); canvas.width = 360; canvas.height = 360;
+        const context = canvas.getContext("2d"); if (!context) return;
+        const side = Math.min(image.width, image.height); const sx = (image.width - side) / 2; const sy = (image.height - side) / 2;
+        context.drawImage(image, sx, sy, side, side, 0, 0, 360, 360);
+        const photo = canvas.toDataURL("image/jpeg", .78);
+        setFamily((current) => { const next = [...current]; next[index] = { name: next[index]?.name || `Family ${index + 1}`, photo }; return next.slice(0, 3); });
+      };
+      image.src = String(reader.result);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function toggleRecording() {
+    if (isRecording) { recorderRef.current?.stop(); return; }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream); recordingChunks.current = []; recorderRef.current = recorder;
+      recorder.ondataavailable = (event) => recordingChunks.current.push(event.data);
+      recorder.onstop = () => {
+        const blob = new Blob(recordingChunks.current, { type: recorder.mimeType }); const reader = new FileReader();
+        reader.onload = () => setPraiseAudio(String(reader.result)); reader.readAsDataURL(blob);
+        stream.getTracks().forEach((track) => track.stop()); setIsRecording(false);
+      };
+      recorder.start(); setIsRecording(true); window.setTimeout(() => recorder.state === "recording" && recorder.stop(), 5000);
+    } catch { setMessage("Microphone अनुमति दें • Allow microphone"); }
+  }
+
+  function playPraise() { if (praiseAudio) void new Audio(praiseAudio).play().catch(() => {}); }
+
   async function toggleFullscreen() {
     try {
       if (document.fullscreenElement) await document.exitFullscreen();
@@ -188,6 +248,7 @@ export default function Home() {
           <b>{Array.from({ length: Math.min(stars, 5) }).map((_, i) => <span key={i}>★</span>)}{stars === 0 && "☆ ☆ ☆"}</b>
         </div>
         <div className="header-actions">
+          {age === "1" && <button className="family-button" onClick={() => setShowFamily(true)}>👪 Family</button>}
           {age === "1" && <button className="fullscreen-button" onClick={toggleFullscreen} aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}>{isFullscreen ? "✕ Exit" : "⛶ Fullscreen"}</button>}
           <button className="age-pill" onClick={() => setShowAge(true)}>{ageOptions[age ?? "4-5"].icon} {ageOptions[age ?? "4-5"].label}⌄</button>
         </div>
@@ -214,6 +275,7 @@ export default function Home() {
               <button className={toddlerGame === "scratch" ? "active" : ""} onClick={() => chooseToddlerGame("scratch")}><span>🎨</span><b>Rangoli Scratch</b></button>
               <button className={toddlerGame === "piano" ? "active" : ""} onClick={() => chooseToddlerGame("piano")}><span>🎹</span><b>Animal Piano</b></button>
               <button className={toddlerGame === "catch" ? "active" : ""} onClick={() => chooseToddlerGame("catch")}><span>🦜</span><b>Catch Tota</b></button>
+              {family.some((member) => member?.photo) && <button className={toddlerGame === "family" ? "active" : ""} onClick={() => chooseToddlerGame("family")}><span>👪</span><b>My Family</b></button>}
               <button className={toddlerGame === "hello" ? "active" : ""} onClick={() => chooseToddlerGame("hello")}><span>👋</span><b>Animal Hello</b></button>
               <button className={toddlerGame === "peek" ? "active" : ""} onClick={() => chooseToddlerGame("peek")}><span>🍃</span><b>Peekaboo</b></button>
               <button className={toddlerGame === "dance" ? "active" : ""} onClick={() => chooseToddlerGame("dance")}><span>🎵</span><b>Dance Party</b></button>
@@ -276,6 +338,10 @@ export default function Home() {
               {toddlerGame === "catch" && <div className="catch-field">
                 <div className="catch-tree">🌳</div><div className="catch-clouds">☁️　☁️</div>
                 <button className="flying-tota" key={`${birdPosition.x}-${birdPosition.y}`} style={{ left: `${birdPosition.x}%`, top: `${birdPosition.y}%` }} onClick={() => { triggerAnimal(5); setStars((value) => value + 1); setBirdPosition({ x: 12 + Math.random() * 76, y: 20 + Math.random() * 58 }); }} aria-label="Catch the flying parrot">🦜<span>★</span></button>
+              </div>}
+              {toddlerGame === "family" && <div className="family-peek-field" style={{ "--family-colour": favouriteColour } as React.CSSProperties}>
+                <h3>{nickname || childName ? `${nickname || childName} की Family` : "मेरी Family"}</h3>
+                <div className="family-peek-grid">{family.filter((member): member is FamilyMember => Boolean(member?.photo)).map((member, index) => <button key={`${member.name}-${index}`} className={familyReveal === index ? "revealed" : ""} onClick={() => { setFamilyReveal(index); playPraise(); }} aria-label={`Find ${member.name}`}><span className="family-curtain">🎁</span><img src={member.photo} alt={member.name} /><b>{member.name}</b></button>)}</div>
               </div>}
               {toddlerGame === "hello" && <div className="toddler-animal-grid">
                 {animals.map((animal, index) => <button key={animal.key} className={activeAnimal === index ? "playing" : ""} style={{ "--animal-colour": animal.colour } as React.CSSProperties} onClick={() => triggerAnimal(index)} aria-label={`Hear a real ${animal.name}`}><span>{animal.emoji}</span><b>{animal.hindi}</b></button>)}
@@ -354,6 +420,17 @@ export default function Home() {
           </div>
         </div>
       )}
+      {showFamily && <div className="family-overlay" role="dialog" aria-modal="true" aria-labelledby="family-title">
+        <div className="family-dialog">
+          <button className="family-close" onClick={() => setShowFamily(false)} aria-label="Close family setup">✕</button>
+          <span className="eyebrow">Private parent setup</span><h2 id="family-title">Make it hers</h2>
+          <p>Everything stays in this browser on this device.</p>
+          <div className="profile-fields"><label>Daughter&apos;s name<input value={childName} onChange={(event) => setChildName(event.target.value)} placeholder="Name" /></label><label>Nickname<input value={nickname} onChange={(event) => setNickname(event.target.value)} placeholder="Gudiya" /></label><label>Favourite colour<input type="color" value={favouriteColour} onChange={(event) => setFavouriteColour(event.target.value)} /></label></div>
+          <h3>Family faces <small>up to 3</small></h3><div className="family-slots">{[0,1,2].map((index) => <div key={index}>{family[index]?.photo ? <img src={family[index].photo} alt="Family preview" /> : <span>📷</span>}<input value={family[index]?.name || ""} onChange={(event) => setFamily((current) => { const next=[...current]; next[index]={ name:event.target.value, photo:next[index]?.photo || "" }; return next; })} placeholder="Mumma / Nani" /><label className="photo-pick">Choose photo<input type="file" accept="image/*" onChange={(event) => addFamilyPhoto(event.target.files?.[0], index)} /></label></div>)}</div>
+          <div className="voice-setup"><div><b>Family praise</b><small>Record “Shabash!” or her favourite phrase (5 sec)</small></div><button className={isRecording ? "recording" : ""} onClick={toggleRecording}>{isRecording ? "■ Stop" : "● Record"}</button>{praiseAudio && <button onClick={playPraise}>▶ Play</button>}</div>
+          <button className="save-family" onClick={saveFamily}>Save Family Mode</button>
+        </div>
+      </div>}
     </main>
   );
 }
