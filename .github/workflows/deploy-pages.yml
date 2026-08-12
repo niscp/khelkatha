@@ -1,4 +1,4 @@
-name: Deploy KhelKatha to GitHub Pages
+name: Deploy WonderTaps to GitHub Pages
 
 on:
   push:

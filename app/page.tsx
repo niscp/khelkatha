@@ -3,6 +3,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 type AgeGroup = "1" | "2-3" | "4-5" | "6-7";
+type Language = "hi" | "en" | "hinglish";
+
+const languageLabels: Record<Language, string> = { hi: "हिंदी", en: "English", hinglish: "Hinglish" };
+
+const copy = {
+  hi: { tagline: "खेलो • सुनो • सीखो", stars: "आज के सितारे", littleHands: "नन्हे हाथों का खेल बगीचा", orchestra: "जानवरों का संगीत", toddlerTitle: <>छूओ। सुनो।<br /><em>फिर से खेलो!</em></>, olderTitle: <>कीबोर्ड दबाओ।<br /><em>जानवर जगाओ!</em></>, freePlay: "मन से खेलो", soundHunt: "आवाज़ खोजो", family: "परिवार", fullscreen: "पूरी स्क्रीन", exit: "बाहर", smash: "जानवर जगाओ", bubbles: "बुलबुले फोड़ो", ball: "उछलती गेंद", scratch: "रंगोली बनाओ", piano: "जानवर पियानो", catch: "तोता पकड़ो", myFamily: "मेरा परिवार", hello: "जानवर से मिलो", peek: "छुपन-छुपाई", dance: "नाच पार्टी", tapInvite: "छूओ • घुमाओ • बटन दबाओ", again: "फिर से! ↻", who: "कौन?", familyTitle: " का परिवार", toddlerNote: "बड़े बटन • असली जानवरों की आवाज़ • कोई गलत जवाब नहीं", keyboardTip: "लैपटॉप पर A S D F G H दबाएँ • फ़ोन पर जानवर छूएँ", hear: "सुनो", hearNote: "हर जानवर की अलग आवाज़", find: "खोजो", findNote: "आवाज़ से जानवर पहचानो", speak: "बोलो", speakNote: "हिंदी और English नाम", win: "जीतो", winNote: "खुशी का सितारा पाओ", grownups: "माता-पिता के लिए", parentTitle: "यह खेल जैसा लगता है। सीखना भी साथ होता है।", parentBody: "हर स्पर्श से बच्चा कारण और परिणाम, सुनने की याददाश्त, जानवरों की पहचान और दो भाषाओं के शब्द सीखता है।", safe: ["✓ कोई विज्ञापन नहीं", "✓ कोई खाता नहीं", "✓ बड़े सुरक्षित बटन"], ageSetup: "माता-पिता की सेटिंग", ageQuestion: "बच्चा कितने साल का है?", ageNote: "हम उम्र के अनुसार खेल की गति तय करेंगे।" },
+  en: { tagline: "Play • Listen • Learn", stars: "Today's stars", littleHands: "Little hands play garden", orchestra: "WonderTaps animal orchestra", toddlerTitle: <>Tap. Listen.<br /><em>Play again!</em></>, olderTitle: <>Press the keyboard.<br /><em>Wake the animals!</em></>, freePlay: "Free play", soundHunt: "Sound hunt", family: "Family", fullscreen: "Fullscreen", exit: "Exit", smash: "Animal Smash", bubbles: "Bubble Pop", ball: "Bouncy Ball", scratch: "Rangoli Scratch", piano: "Animal Piano", catch: "Catch Parrot", myFamily: "My Family", hello: "Animal Hello", peek: "Peekaboo", dance: "Dance Party", tapInvite: "Tap • Swipe • Smash keys", again: "Again! ↻", who: "Who?", familyTitle: "'s Family", toddlerNote: "Big buttons • Real animal sounds • No wrong answers", keyboardTip: "Press A S D F G H on a laptop • Tap any animal on a phone", hear: "Listen", hearNote: "Hear a unique animal voice", find: "Find", findNote: "Match sound to animal", speak: "Speak", speakNote: "Hindi and English names", win: "Win", winNote: "Earn a happy star", grownups: "For grown-ups", parentTitle: "It feels like play. Learning happens too.", parentBody: "Every tap builds cause-and-effect understanding, listening memory, animal recognition and bilingual vocabulary.", safe: ["✓ No ads", "✓ No account", "✓ Big safe taps"], ageSetup: "Grown-up setup", ageQuestion: "How old is your child?", ageNote: "We'll set the right pace and play style." },
+  hinglish: { tagline: "Khelo • Suno • Seekho", stars: "Aaj ke stars", littleHands: "Nanhe haathon ka play garden", orchestra: "WonderTaps animal orchestra", toddlerTitle: <>Chhoo. Suno.<br /><em>Phir se khelo!</em></>, olderTitle: <>Keyboard dabao.<br /><em>Animals jagao!</em></>, freePlay: "Free khelo", soundHunt: "Awaaz dhoondo", family: "Family", fullscreen: "Fullscreen", exit: "Exit", smash: "Animal Jagao", bubbles: "Bubble Phodo", ball: "Bouncy Gend", scratch: "Rangoli Banao", piano: "Animal Piano", catch: "Tota Pakdo", myFamily: "Meri Family", hello: "Animal Hello", peek: "Chhupan Chhupai", dance: "Dance Party", tapInvite: "Tap • Swipe • Keys dabao", again: "Phir se! ↻", who: "Kaun?", familyTitle: " ki Family", toddlerNote: "Bade buttons • Asli animal sounds • Koi galat jawab nahi", keyboardTip: "Laptop par A S D F G H dabao • Phone par animal tap karo", hear: "Suno", hearNote: "Har animal ki alag awaaz", find: "Dhoondo", findNote: "Awaaz se animal pehchano", speak: "Bolo", speakNote: "Hindi + English names", win: "Jeeto", winNote: "Happy star pao", grownups: "Parents ke liye", parentTitle: "Yeh play lagta hai. Learning bhi hoti hai.", parentBody: "Har tap cause-and-effect, listening memory, animal recognition aur bilingual vocabulary banata hai.", safe: ["✓ No ads", "✓ No account", "✓ Bade safe taps"], ageSetup: "Parent setup", ageQuestion: "Baccha kitne saal ka hai?", ageNote: "Hum age ke hisaab se pace aur play style set karenge." },
+};
 
 const ageOptions: Record<AgeGroup, { label: string; icon: string; note: string }> = {
   "1": { label: "1 year", icon: "🧸", note: "Tap & hear" },
@@ -12,12 +21,12 @@ const ageOptions: Record<AgeGroup, { label: string; icon: string; note: string }
 };
 
 const animals = [
-  { key: "A", emoji: "🐴", name: "Ghoda", hindi: "घोड़ा", sound: "हिन-हिन!", colour: "#ef735e", x: "10%", audio: "horse.ogg" },
-  { key: "S", emoji: "🐘", name: "Hathi", hindi: "हाथी", sound: "पों-पों!", colour: "#64b7d4", x: "29%", audio: "elephant.ogg" },
-  { key: "D", emoji: "🦁", name: "Sher", hindi: "शेर", sound: "गुर्रर्र!", colour: "#f2ad35", x: "45%", audio: "lion.ogg" },
-  { key: "F", emoji: "🐵", name: "Bandar", hindi: "बंदर", sound: "ऊँ-आँ!", colour: "#a980cc", x: "60%", audio: "monkey.ogg" },
-  { key: "G", emoji: "🐮", name: "Gaay", hindi: "गाय", sound: "माँऽऽ!", colour: "#f5eee0", x: "76%", audio: "cow.ogg" },
-  { key: "H", emoji: "🦜", name: "Tota", hindi: "तोता", sound: "चीं-चीं!", colour: "#69b84a", x: "91%", audio: "parrot.ogg" },
+  { key: "A", emoji: "🐴", name: "Ghoda", english: "Horse", hindi: "घोड़ा", sound: "हिन-हिन!", colour: "#ef735e", x: "10%", audio: "horse.ogg" },
+  { key: "S", emoji: "🐘", name: "Hathi", english: "Elephant", hindi: "हाथी", sound: "पों-पों!", colour: "#64b7d4", x: "29%", audio: "elephant.ogg" },
+  { key: "D", emoji: "🦁", name: "Sher", english: "Lion", hindi: "शेर", sound: "गुर्रर्र!", colour: "#f2ad35", x: "45%", audio: "lion.ogg" },
+  { key: "F", emoji: "🐵", name: "Bandar", english: "Monkey", hindi: "बंदर", sound: "ऊँ-आँ!", colour: "#a980cc", x: "60%", audio: "monkey.ogg" },
+  { key: "G", emoji: "🐮", name: "Gaay", english: "Cow", hindi: "गाय", sound: "माँऽऽ!", colour: "#f5eee0", x: "76%", audio: "cow.ogg" },
+  { key: "H", emoji: "🦜", name: "Tota", english: "Parrot", hindi: "तोता", sound: "चीं-चीं!", colour: "#69b84a", x: "91%", audio: "parrot.ogg" },
 ];
 
 type ToddlerGame = "smash" | "bubbles" | "ball" | "scratch" | "piano" | "catch" | "family" | "hello" | "peek" | "dance";
@@ -25,6 +34,7 @@ type Burst = { id: number; x: number; y: number; animal: number; kind: "animal" 
 type FamilyMember = { name: string; photo: string };
 
 export default function Home() {
+  const [language, setLanguage] = useState<Language>("hinglish");
   const [age, setAge] = useState<AgeGroup | null>(null);
   const [showAge, setShowAge] = useState(false);
   const [activeAnimal, setActiveAnimal] = useState<number | null>(null);
@@ -57,7 +67,9 @@ export default function Home() {
   const recordingChunks = useRef<Blob[]>([]);
 
   useEffect(() => {
-    const saved = window.localStorage.getItem("khelkatha-age") as AgeGroup | null;
+    const savedLanguage = window.localStorage.getItem("wondertaps-language") as Language | null;
+    if (savedLanguage && savedLanguage in copy) setLanguage(savedLanguage);
+    const saved = (window.localStorage.getItem("wondertaps-age") || window.localStorage.getItem("khelkatha-age")) as AgeGroup | null;
     if (saved && saved in ageOptions) {
       setAge(saved);
       if (saved === "1") {
@@ -67,7 +79,7 @@ export default function Home() {
     }
     else setShowAge(true);
     try {
-      const profile = JSON.parse(window.localStorage.getItem("khelkatha-family") || "null");
+      const profile = JSON.parse(window.localStorage.getItem("wondertaps-family") || window.localStorage.getItem("khelkatha-family") || "null");
       if (profile) {
         setChildName(profile.childName || ""); setNickname(profile.nickname || "");
         setFavouriteColour(profile.favouriteColour || "#ef6654"); setFamily(profile.family || []);
@@ -75,6 +87,15 @@ export default function Home() {
       }
     } catch { /* start with an empty private profile */ }
   }, []);
+
+  const words = copy[language];
+  const animalName = useCallback((index: number) => language === "hi" ? animals[index].hindi : language === "en" ? animals[index].english : animals[index].name, [language]);
+
+  function chooseLanguage(value: Language) {
+    setLanguage(value);
+    window.localStorage.setItem("wondertaps-language", value);
+    document.documentElement.lang = value === "hinglish" ? "en-IN" : value;
+  }
 
   useEffect(() => {
     const syncFullscreen = () => setIsFullscreen(Boolean(document.fullscreenElement));
@@ -148,7 +169,7 @@ export default function Home() {
     setMode(value === "1" ? "free" : "challenge");
     setToddlerGame("smash");
     setMessage(value === "1" ? "कहीं भी छूओ! • Tap anywhere!" : `${animals[challenge].sound} कौन बोलता है?`);
-    window.localStorage.setItem("khelkatha-age", value);
+    window.localStorage.setItem("wondertaps-age", value);
   }
 
   function changeMode(value: "free" | "challenge") {
@@ -187,7 +208,7 @@ export default function Home() {
   }
 
   function saveFamily() {
-    window.localStorage.setItem("khelkatha-family", JSON.stringify({ childName, nickname, favouriteColour, family, praiseAudio }));
+    window.localStorage.setItem("wondertaps-family", JSON.stringify({ childName, nickname, favouriteColour, family, praiseAudio }));
     setShowFamily(false);
     setMessage(`${nickname || childName || "बच्चा"}, खेल शुरू! ★`);
   }
@@ -239,17 +260,18 @@ export default function Home() {
   return (
     <main className={`app-shell age-${age ?? "4-5"} ${isFullscreen ? "is-fullscreen" : ""}`}>
       <header className="play-header">
-        <a className="brand" href="#play" aria-label="KhelKatha home">
-          <span className="brand-mark">क</span>
-          <span>KhelKatha<small>खेलो • सुनो • सीखो</small></span>
+        <a className="brand" href="#play" aria-label="WonderTaps home">
+          <span className="brand-mark">W</span>
+          <span>WonderTaps<small>{words.tagline}</small></span>
         </a>
         <div className="header-center" aria-label="Activity progress">
-          <span>आज के सितारे</span>
+          <span>{words.stars}</span>
           <b>{Array.from({ length: Math.min(stars, 5) }).map((_, i) => <span key={i}>★</span>)}{stars === 0 && "☆ ☆ ☆"}</b>
         </div>
         <div className="header-actions">
-          {age === "1" && <button className="family-button" onClick={() => setShowFamily(true)}>👪 Family</button>}
-          {age === "1" && <button className="fullscreen-button" onClick={toggleFullscreen} aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}>{isFullscreen ? "✕ Exit" : "⛶ Fullscreen"}</button>}
+          <div className="language-switch" aria-label="Choose language">{(["hi", "en", "hinglish"] as Language[]).map((value) => <button key={value} className={language === value ? "active" : ""} onClick={() => chooseLanguage(value)} lang={value === "hinglish" ? "en-IN" : value}>{languageLabels[value]}</button>)}</div>
+          {age === "1" && <button className="family-button" onClick={() => setShowFamily(true)}>👪 {words.family}</button>}
+          {age === "1" && <button className="fullscreen-button" onClick={toggleFullscreen} aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}>{isFullscreen ? `✕ ${words.exit}` : `⛶ ${words.fullscreen}`}</button>}
           <button className="age-pill" onClick={() => setShowAge(true)}>{ageOptions[age ?? "4-5"].icon} {ageOptions[age ?? "4-5"].label}⌄</button>
         </div>
       </header>
@@ -257,28 +279,28 @@ export default function Home() {
       <section className={`sound-lab ${age === "1" ? "toddler-lab" : ""}`} id="play">
         <div className="lab-intro">
           <div>
-            <span className="eyebrow">{age === "1" ? "Little hands play garden" : "KhelKatha animal orchestra"}</span>
-            <h1>{age === "1" ? <>छूओ. सुनो.<br /><em>फिर से खेलो!</em></> : <>Keyboard दबाओ.<br /><em>जानवर जगाओ!</em></>}</h1>
+            <span className="eyebrow">{age === "1" ? words.littleHands : words.orchestra}</span>
+            <h1>{age === "1" ? words.toddlerTitle : words.olderTitle}</h1>
           </div>
           {age !== "1" && <div className="mode-switch" aria-label="Choose play mode">
-            <button className={mode === "free" ? "active" : ""} onClick={() => changeMode("free")}>🎹 Free play</button>
-            <button className={mode === "challenge" ? "active" : ""} onClick={() => changeMode("challenge")}>👂 Sound hunt</button>
+            <button className={mode === "free" ? "active" : ""} onClick={() => changeMode("free")}>🎹 {words.freePlay}</button>
+            <button className={mode === "challenge" ? "active" : ""} onClick={() => changeMode("challenge")}>👂 {words.soundHunt}</button>
           </div>}
         </div>
 
         {age === "1" ? (
           <div className="toddler-world">
             <nav className="toddler-games" aria-label="Games for one year olds">
-              <button className={toddlerGame === "smash" ? "active" : ""} onClick={() => chooseToddlerGame("smash")}><span>✨</span><b>Animal Smash</b></button>
-              <button className={toddlerGame === "bubbles" ? "active" : ""} onClick={() => chooseToddlerGame("bubbles")}><span>🫧</span><b>Bubble Pop</b></button>
-              <button className={toddlerGame === "ball" ? "active" : ""} onClick={() => chooseToddlerGame("ball")}><span>🟠</span><b>Bouncy Gend</b></button>
-              <button className={toddlerGame === "scratch" ? "active" : ""} onClick={() => chooseToddlerGame("scratch")}><span>🎨</span><b>Rangoli Scratch</b></button>
-              <button className={toddlerGame === "piano" ? "active" : ""} onClick={() => chooseToddlerGame("piano")}><span>🎹</span><b>Animal Piano</b></button>
-              <button className={toddlerGame === "catch" ? "active" : ""} onClick={() => chooseToddlerGame("catch")}><span>🦜</span><b>Catch Tota</b></button>
-              {family.some((member) => member?.photo) && <button className={toddlerGame === "family" ? "active" : ""} onClick={() => chooseToddlerGame("family")}><span>👪</span><b>My Family</b></button>}
-              <button className={toddlerGame === "hello" ? "active" : ""} onClick={() => chooseToddlerGame("hello")}><span>👋</span><b>Animal Hello</b></button>
-              <button className={toddlerGame === "peek" ? "active" : ""} onClick={() => chooseToddlerGame("peek")}><span>🍃</span><b>Peekaboo</b></button>
-              <button className={toddlerGame === "dance" ? "active" : ""} onClick={() => chooseToddlerGame("dance")}><span>🎵</span><b>Dance Party</b></button>
+              <button className={toddlerGame === "smash" ? "active" : ""} onClick={() => chooseToddlerGame("smash")}><span>✨</span><b>{words.smash}</b></button>
+              <button className={toddlerGame === "bubbles" ? "active" : ""} onClick={() => chooseToddlerGame("bubbles")}><span>🫧</span><b>{words.bubbles}</b></button>
+              <button className={toddlerGame === "ball" ? "active" : ""} onClick={() => chooseToddlerGame("ball")}><span>🟠</span><b>{words.ball}</b></button>
+              <button className={toddlerGame === "scratch" ? "active" : ""} onClick={() => chooseToddlerGame("scratch")}><span>🎨</span><b>{words.scratch}</b></button>
+              <button className={toddlerGame === "piano" ? "active" : ""} onClick={() => chooseToddlerGame("piano")}><span>🎹</span><b>{words.piano}</b></button>
+              <button className={toddlerGame === "catch" ? "active" : ""} onClick={() => chooseToddlerGame("catch")}><span>🦜</span><b>{words.catch}</b></button>
+              {family.some((member) => member?.photo) && <button className={toddlerGame === "family" ? "active" : ""} onClick={() => chooseToddlerGame("family")}><span>👪</span><b>{words.myFamily}</b></button>}
+              <button className={toddlerGame === "hello" ? "active" : ""} onClick={() => chooseToddlerGame("hello")}><span>👋</span><b>{words.hello}</b></button>
+              <button className={toddlerGame === "peek" ? "active" : ""} onClick={() => chooseToddlerGame("peek")}><span>🍃</span><b>{words.peek}</b></button>
+              <button className={toddlerGame === "dance" ? "active" : ""} onClick={() => chooseToddlerGame("dance")}><span>🎵</span><b>{words.dance}</b></button>
             </nav>
 
             <div className={`toddler-card game-${toddlerGame}`}>
@@ -300,7 +322,7 @@ export default function Home() {
                 }}
               >
                 <div className="meadow-sun">☀️</div><div className="meadow-cloud one">☁️</div><div className="meadow-cloud two">☁️</div>
-                <div className="smash-invite"><span>☝️</span><b>Tap • Swipe • Smash keys</b></div>
+                <div className="smash-invite"><span>☝️</span><b>{words.tapInvite}</b></div>
                 {bursts.map((burst) => burst.kind === "spark" ? <span key={burst.id} className="finger-spark" style={{ left: `${burst.x}%`, top: `${burst.y}%` }}>✦</span> : <span key={burst.id} className="smash-burst" style={{ left: `${burst.x}%`, top: `${burst.y}%`, "--burst-colour": animals[burst.animal].colour } as React.CSSProperties}><i>★ ● ✦</i><b>{animals[burst.animal].emoji}</b><small>{animals[burst.animal].hindi}</small></span>)}
                 <div className="meadow-ground">🌼　🌱　🌸　🌿　🌻　🌱　🌼</div>
               </div>}
@@ -309,7 +331,7 @@ export default function Home() {
                   const animalIndex = index % animals.length; const popped = poppedBubbles.includes(index);
                   return <button key={index} className={popped ? "popped" : ""} onClick={() => { if (!popped) { setPoppedBubbles((current) => [...current, index]); triggerAnimal(animalIndex); } }} aria-label={`Pop bubble ${index + 1}`}><span>{popped ? animals[animalIndex].emoji : ""}</span></button>;
                 })}
-                {poppedBubbles.length === 9 && <button className="again-button" onClick={() => setPoppedBubbles([])}>फिर से! ↻</button>}
+                {poppedBubbles.length === 9 && <button className="again-button" onClick={() => setPoppedBubbles([])}>{words.again}</button>}
               </div>}
               {toddlerGame === "ball" && <div className="ball-field" onPointerDown={(event) => {
                 const box = event.currentTarget.getBoundingClientRect();
@@ -340,21 +362,21 @@ export default function Home() {
                 <button className="flying-tota" key={`${birdPosition.x}-${birdPosition.y}`} style={{ left: `${birdPosition.x}%`, top: `${birdPosition.y}%` }} onClick={() => { triggerAnimal(5); setStars((value) => value + 1); setBirdPosition({ x: 12 + Math.random() * 76, y: 20 + Math.random() * 58 }); }} aria-label="Catch the flying parrot">🦜<span>★</span></button>
               </div>}
               {toddlerGame === "family" && <div className="family-peek-field" style={{ "--family-colour": favouriteColour } as React.CSSProperties}>
-                <h3>{nickname || childName ? `${nickname || childName} की Family` : "मेरी Family"}</h3>
+                <h3>{nickname || childName ? `${nickname || childName}${words.familyTitle}` : words.myFamily}</h3>
                 <div className="family-peek-grid">{family.filter((member): member is FamilyMember => Boolean(member?.photo)).map((member, index) => <button key={`${member.name}-${index}`} className={familyReveal === index ? "revealed" : ""} onClick={() => { setFamilyReveal(index); playPraise(); }} aria-label={`Find ${member.name}`}><span className="family-curtain">🎁</span><img src={member.photo} alt={member.name} /><b>{member.name}</b></button>)}</div>
               </div>}
               {toddlerGame === "hello" && <div className="toddler-animal-grid">
-                {animals.map((animal, index) => <button key={animal.key} className={activeAnimal === index ? "playing" : ""} style={{ "--animal-colour": animal.colour } as React.CSSProperties} onClick={() => triggerAnimal(index)} aria-label={`Hear a real ${animal.name}`}><span>{animal.emoji}</span><b>{animal.hindi}</b></button>)}
+                {animals.map((animal, index) => <button key={animal.key} className={activeAnimal === index ? "playing" : ""} style={{ "--animal-colour": animal.colour } as React.CSSProperties} onClick={() => triggerAnimal(index)} aria-label={`Hear a real ${animal.english}`}><span>{animal.emoji}</span><b>{animalName(index)}</b></button>)}
               </div>}
               {toddlerGame === "peek" && <div className="peek-grid">
-                {[1, 4, 0].map((animalIndex, door) => <button key={animalIndex} className={revealed === door ? "open" : ""} onClick={() => { setRevealed(door); triggerAnimal(animalIndex); }} aria-label={`Open leaf ${door + 1}`}><span className="leaf">🍃</span><span className="peek-animal">{animals[animalIndex].emoji}</span><b>{revealed === door ? animals[animalIndex].hindi : "कौन?"}</b></button>)}
+                {[1, 4, 0].map((animalIndex, door) => <button key={animalIndex} className={revealed === door ? "open" : ""} onClick={() => { setRevealed(door); triggerAnimal(animalIndex); }} aria-label={`Open leaf ${door + 1}`}><span className="leaf">🍃</span><span className="peek-animal">{animals[animalIndex].emoji}</span><b>{revealed === door ? animalName(animalIndex) : words.who}</b></button>)}
               </div>}
               {toddlerGame === "dance" && <div className="dance-floor">
                 <div className={`dance-star ${activeAnimal !== null ? "dancing" : ""}`} key={pulse}>{activeAnimal === null ? "🎶" : animals[activeAnimal].emoji}</div>
                 <div className="dance-choices">{[2, 3, 5].map((index) => <button key={index} style={{ "--animal-colour": animals[index].colour } as React.CSSProperties} onClick={() => triggerAnimal(index)} aria-label={`Make ${animals[index].name} dance`}>{animals[index].emoji}</button>)}</div>
               </div>}
             </div>
-            <p className="toddler-note">बड़े बटन • असली जानवरों की आवाज़ • कोई गलत जवाब नहीं</p>
+            <p className="toddler-note">{words.toddlerNote}</p>
           </div>
         ) : <>
 
@@ -380,35 +402,35 @@ export default function Home() {
         <div className="keyboard-row" aria-label="Animal sound keyboard">
           {animals.map((animal, index) => (
             <button key={animal.key} className={activeAnimal === index ? "playing" : ""} onClick={() => triggerAnimal(index)} style={{ "--animal-colour": animal.colour } as React.CSSProperties}>
-              <kbd>{animal.key}</kbd><span>{animal.emoji}</span><strong>{animal.hindi}</strong><small>{animal.sound}</small>
+              <kbd>{animal.key}</kbd><span>{animal.emoji}</span><strong>{animalName(index)}</strong><small>{animal.sound}</small>
             </button>
           ))}
         </div>
-        <p className="keyboard-tip">Laptop पर A S D F G H दबाएँ • On phone, tap any animal</p>
+        <p className="keyboard-tip">{words.keyboardTip}</p>
         </>}
       </section>
 
       <section className="how-it-learns">
-        <div><span>👂</span><b>सुनो</b><small>Hear a unique voice</small></div>
-        <div><span>☝️</span><b>खोजो</b><small>Match sound to animal</small></div>
-        <div><span>🗣️</span><b>बोलो</b><small>Hindi + English names</small></div>
-        <div><span>★</span><b>जीतो</b><small>Earn a happy star</small></div>
+        <div><span>👂</span><b>{words.hear}</b><small>{words.hearNote}</small></div>
+        <div><span>☝️</span><b>{words.find}</b><small>{words.findNote}</small></div>
+        <div><span>🗣️</span><b>{words.speak}</b><small>{words.speakNote}</small></div>
+        <div><span>★</span><b>{words.win}</b><small>{words.winNote}</small></div>
       </section>
 
       <section className="parent-note">
-        <div><span className="eyebrow">For grown-ups</span><h2>It feels like noise.<br />It&apos;s actually learning.</h2></div>
-        <p>Every key builds cause-and-effect understanding, listening memory, animal recognition and bilingual vocabulary. Sound Hunt adds a simple recall challenge when your child is ready.</p>
-        <div className="safe-stamp">✓ No ads<br />✓ No account<br />✓ Big safe taps</div>
+        <div><span className="eyebrow">{words.grownups}</span><h2>{words.parentTitle}</h2></div>
+        <p>{words.parentBody}</p>
+        <div className="safe-stamp">{words.safe.map((line) => <span key={line}>{line}<br /></span>)}</div>
       </section>
 
-      <footer><b>KhelKatha</b><span>Original characters inspired by the joy of Indian childhood.</span><small>Animal recordings: Wikimedia Commons • See source credits in the repository</small></footer>
+      <footer><b>WonderTaps</b><span>Playful learning made for curious little hands.</span><small>Animal recordings: Wikimedia Commons • See source credits in the repository</small></footer>
 
       {showAge && (
         <div className="age-overlay" role="dialog" aria-modal="true" aria-labelledby="age-title">
           <div className="age-dialog">
-            <span className="eyebrow">Grown-up setup</span>
-            <h2 id="age-title">बच्चा कितने साल का है?</h2>
-            <p>We&apos;ll set the right pace and play style.</p>
+            <span className="eyebrow">{words.ageSetup}</span>
+            <h2 id="age-title">{words.ageQuestion}</h2>
+            <p>{words.ageNote}</p>
             <div className="age-options">
               {(Object.keys(ageOptions) as AgeGroup[]).map((value) => (
                 <button key={value} onClick={() => chooseAge(value)}>
