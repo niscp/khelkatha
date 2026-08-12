@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type AgeGroup = "1" | "2-3" | "4-5" | "6-7";
 
@@ -12,13 +12,15 @@ const ageOptions: Record<AgeGroup, { label: string; icon: string; note: string }
 };
 
 const animals = [
-  { key: "A", emoji: "🐴", name: "Ghoda", hindi: "घोड़ा", sound: "हिन-हिन!", colour: "#ef735e", x: "10%" },
-  { key: "S", emoji: "🐘", name: "Hathi", hindi: "हाथी", sound: "पों-पों!", colour: "#64b7d4", x: "29%" },
-  { key: "D", emoji: "🦁", name: "Sher", hindi: "शेर", sound: "गुर्रर्र!", colour: "#f2ad35", x: "45%" },
-  { key: "F", emoji: "🐵", name: "Bandar", hindi: "बंदर", sound: "ऊँ-आँ!", colour: "#a980cc", x: "60%" },
-  { key: "G", emoji: "🐮", name: "Gaay", hindi: "गाय", sound: "माँऽऽ!", colour: "#f5eee0", x: "76%" },
-  { key: "H", emoji: "🦜", name: "Tota", hindi: "तोता", sound: "मिट्ठू!", colour: "#69b84a", x: "91%" },
+  { key: "A", emoji: "🐴", name: "Ghoda", hindi: "घोड़ा", sound: "हिन-हिन!", colour: "#ef735e", x: "10%", audio: "horse.ogg" },
+  { key: "S", emoji: "🐘", name: "Hathi", hindi: "हाथी", sound: "पों-पों!", colour: "#64b7d4", x: "29%", audio: "elephant.ogg" },
+  { key: "D", emoji: "🦁", name: "Sher", hindi: "शेर", sound: "गुर्रर्र!", colour: "#f2ad35", x: "45%", audio: "lion.ogg" },
+  { key: "F", emoji: "🐵", name: "Bandar", hindi: "बंदर", sound: "ऊँ-आँ!", colour: "#a980cc", x: "60%", audio: "monkey.ogg" },
+  { key: "G", emoji: "🐮", name: "Gaay", hindi: "गाय", sound: "माँऽऽ!", colour: "#f5eee0", x: "76%", audio: "cow.ogg" },
+  { key: "H", emoji: "🦜", name: "Tota", hindi: "तोता", sound: "चीं-चीं!", colour: "#69b84a", x: "91%", audio: "parrot.ogg" },
 ];
+
+type ToddlerGame = "hello" | "peek" | "dance";
 
 export default function Home() {
   const [age, setAge] = useState<AgeGroup | null>(null);
@@ -29,6 +31,9 @@ export default function Home() {
   const [stars, setStars] = useState(0);
   const [pulse, setPulse] = useState(0);
   const [message, setMessage] = useState("कोई key दबाओ • Press any animal key!");
+  const [toddlerGame, setToddlerGame] = useState<ToddlerGame>("hello");
+  const [revealed, setRevealed] = useState<number | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     const saved = window.localStorage.getItem("khelkatha-age") as AgeGroup | null;
@@ -36,47 +41,22 @@ export default function Home() {
     else setShowAge(true);
   }, []);
 
-  const playTone = useCallback((index: number) => {
+  const playAnimalSound = useCallback((index: number) => {
     try {
-      const AudioContextClass = window.AudioContext ||
-        (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-      if (!AudioContextClass) return;
-      const ctx = new AudioContextClass();
-      void ctx.resume();
-      const patterns = [
-        [320, 430, 290], [130, 170, 240], [100, 82, 70],
-        [520, 680, 570], [150, 125, 145], [820, 1100, 920],
-      ];
-      patterns[index].forEach((frequency, step) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = index === 2 ? "sawtooth" : index === 4 ? "sine" : "triangle";
-        osc.frequency.setValueAtTime(frequency, ctx.currentTime + step * .12);
-        gain.gain.setValueAtTime(index === 2 ? .055 : .09, ctx.currentTime + step * .12);
-        gain.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + step * .12 + .16);
-        osc.connect(gain).connect(ctx.destination);
-        osc.start(ctx.currentTime + step * .12);
-        osc.stop(ctx.currentTime + step * .12 + .18);
-      });
-      window.setTimeout(() => void ctx.close(), 700);
-    } catch { /* visual and spoken play continue without Web Audio */ }
+      audioRef.current?.pause();
+      const audio = new Audio(`./sounds/${animals[index].audio}`);
+      audio.volume = .9;
+      audioRef.current = audio;
+      void audio.play();
+      if (index === 2 || index === 3) window.setTimeout(() => audio.pause(), 2800);
+    } catch { /* visual play continues if audio is unavailable */ }
   }, []);
 
   const triggerAnimal = useCallback((index: number) => {
     const animal = animals[index];
     setActiveAnimal(index);
     setPulse((value) => value + 1);
-    playTone(index);
-
-    if ("speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
-      const words = age === "1" ? `${animal.sound} ${animal.hindi}` : `${animal.hindi}. ${animal.name}. ${animal.sound}`;
-      const voice = new SpeechSynthesisUtterance(words);
-      voice.lang = "hi-IN";
-      voice.rate = age === "1" ? .72 : .86;
-      voice.pitch = index === 1 || index === 2 || index === 4 ? .72 : 1.25;
-      window.speechSynthesis.speak(voice);
-    }
+    playAnimalSound(index);
 
     if (mode === "challenge") {
       if (index === challenge) {
@@ -93,7 +73,7 @@ export default function Home() {
     } else {
       setMessage(`${animal.emoji} ${animal.hindi} • ${animal.name} says ${animal.sound}`);
     }
-  }, [age, challenge, mode, playTone]);
+  }, [challenge, mode, playAnimalSound]);
 
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
@@ -121,6 +101,13 @@ export default function Home() {
     setMessage(value === "free" ? "कोई key दबाओ • Press any animal key!" : `${animals[challenge].sound} कौन बोलता है? • Who makes this sound?`);
   }
 
+  function chooseToddlerGame(value: ToddlerGame) {
+    setToddlerGame(value);
+    setActiveAnimal(null);
+    setRevealed(null);
+    setMessage(value === "hello" ? "जानवर को छूओ!" : value === "peek" ? "पत्ते के पीछे कौन है?" : "किसको नचाएँ?");
+  }
+
   return (
     <main className={`app-shell age-${age ?? "4-5"}`}>
       <header className="play-header">
@@ -135,17 +122,42 @@ export default function Home() {
         <button className="age-pill" onClick={() => setShowAge(true)}>{ageOptions[age ?? "4-5"].icon} {ageOptions[age ?? "4-5"].label}⌄</button>
       </header>
 
-      <section className="sound-lab" id="play">
+      <section className={`sound-lab ${age === "1" ? "toddler-lab" : ""}`} id="play">
         <div className="lab-intro">
           <div>
-            <span className="eyebrow">KhelKatha animal orchestra</span>
-            <h1>Keyboard दबाओ.<br /><em>जानवर जगाओ!</em></h1>
+            <span className="eyebrow">{age === "1" ? "Little hands play garden" : "KhelKatha animal orchestra"}</span>
+            <h1>{age === "1" ? <>छूओ. सुनो.<br /><em>फिर से खेलो!</em></> : <>Keyboard दबाओ.<br /><em>जानवर जगाओ!</em></>}</h1>
           </div>
-          <div className="mode-switch" aria-label="Choose play mode">
+          {age !== "1" && <div className="mode-switch" aria-label="Choose play mode">
             <button className={mode === "free" ? "active" : ""} onClick={() => changeMode("free")}>🎹 Free play</button>
             <button className={mode === "challenge" ? "active" : ""} onClick={() => changeMode("challenge")}>👂 Sound hunt</button>
-          </div>
+          </div>}
         </div>
+
+        {age === "1" ? (
+          <div className="toddler-world">
+            <nav className="toddler-games" aria-label="Games for one year olds">
+              <button className={toddlerGame === "hello" ? "active" : ""} onClick={() => chooseToddlerGame("hello")}><span>👋</span><b>Animal Hello</b></button>
+              <button className={toddlerGame === "peek" ? "active" : ""} onClick={() => chooseToddlerGame("peek")}><span>🍃</span><b>Peekaboo</b></button>
+              <button className={toddlerGame === "dance" ? "active" : ""} onClick={() => chooseToddlerGame("dance")}><span>🎵</span><b>Dance Party</b></button>
+            </nav>
+
+            <div className={`toddler-card game-${toddlerGame}`}>
+              <div className="toddler-prompt" role="status">{message}</div>
+              {toddlerGame === "hello" && <div className="toddler-animal-grid">
+                {animals.map((animal, index) => <button key={animal.key} className={activeAnimal === index ? "playing" : ""} style={{ "--animal-colour": animal.colour } as React.CSSProperties} onClick={() => triggerAnimal(index)} aria-label={`Hear a real ${animal.name}`}><span>{animal.emoji}</span><b>{animal.hindi}</b></button>)}
+              </div>}
+              {toddlerGame === "peek" && <div className="peek-grid">
+                {[1, 4, 0].map((animalIndex, door) => <button key={animalIndex} className={revealed === door ? "open" : ""} onClick={() => { setRevealed(door); triggerAnimal(animalIndex); }} aria-label={`Open leaf ${door + 1}`}><span className="leaf">🍃</span><span className="peek-animal">{animals[animalIndex].emoji}</span><b>{revealed === door ? animals[animalIndex].hindi : "कौन?"}</b></button>)}
+              </div>}
+              {toddlerGame === "dance" && <div className="dance-floor">
+                <div className={`dance-star ${activeAnimal !== null ? "dancing" : ""}`} key={pulse}>{activeAnimal === null ? "🎶" : animals[activeAnimal].emoji}</div>
+                <div className="dance-choices">{[2, 3, 5].map((index) => <button key={index} style={{ "--animal-colour": animals[index].colour } as React.CSSProperties} onClick={() => triggerAnimal(index)} aria-label={`Make ${animals[index].name} dance`}>{animals[index].emoji}</button>)}</div>
+              </div>}
+            </div>
+            <p className="toddler-note">बड़े बटन • असली जानवरों की आवाज़ • कोई गलत जवाब नहीं</p>
+          </div>
+        ) : <>
 
         <div className="stage-wrap">
           <img src="./khelkatha-animal-stage.png" alt="A horse, elephant, lion, monkey, cow and parrot performing together on a colourful village stage" />
@@ -174,6 +186,7 @@ export default function Home() {
           ))}
         </div>
         <p className="keyboard-tip">Laptop पर A S D F G H दबाएँ • On phone, tap any animal</p>
+        </>}
       </section>
 
       <section className="how-it-learns">
@@ -189,7 +202,7 @@ export default function Home() {
         <div className="safe-stamp">✓ No ads<br />✓ No account<br />✓ Big safe taps</div>
       </section>
 
-      <footer><b>KhelKatha</b><span>Original characters inspired by the joy of Indian childhood.</span><small>Made for ages 1–7</small></footer>
+      <footer><b>KhelKatha</b><span>Original characters inspired by the joy of Indian childhood.</span><small>Animal recordings: Wikimedia Commons • See source credits in the repository</small></footer>
 
       {showAge && (
         <div className="age-overlay" role="dialog" aria-modal="true" aria-labelledby="age-title">
