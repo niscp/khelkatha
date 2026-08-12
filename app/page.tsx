@@ -271,7 +271,7 @@ export default function Home() {
         <div className="header-actions">
           <div className="language-switch" aria-label="Choose language">{(["hi", "en", "hinglish"] as Language[]).map((value) => <button key={value} className={language === value ? "active" : ""} onClick={() => chooseLanguage(value)} lang={value === "hinglish" ? "en-IN" : value}>{languageLabels[value]}</button>)}</div>
           {age === "1" && <button className="family-button" onClick={() => setShowFamily(true)}>👪 {words.family}</button>}
-          {age === "1" && <button className="fullscreen-button" onClick={toggleFullscreen} aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}>{isFullscreen ? `✕ ${words.exit}` : `⛶ ${words.fullscreen}`}</button>}
+          <button className="fullscreen-button" onClick={toggleFullscreen} aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}>{isFullscreen ? `✕ ${words.exit}` : `⛶ ${words.fullscreen}`}</button>
           <button className="age-pill" onClick={() => setShowAge(true)}>{ageOptions[age ?? "4-5"].icon} {ageOptions[age ?? "4-5"].label}⌄</button>
         </div>
       </header>
