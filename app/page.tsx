@@ -20,7 +20,8 @@ const animals = [
   { key: "H", emoji: "🦜", name: "Tota", hindi: "तोता", sound: "चीं-चीं!", colour: "#69b84a", x: "91%", audio: "parrot.ogg" },
 ];
 
-type ToddlerGame = "hello" | "peek" | "dance";
+type ToddlerGame = "smash" | "hello" | "peek" | "dance";
+type Burst = { id: number; x: number; y: number; animal: number; kind: "animal" | "spark" };
 
 export default function Home() {
   const [age, setAge] = useState<AgeGroup | null>(null);
@@ -31,13 +32,22 @@ export default function Home() {
   const [stars, setStars] = useState(0);
   const [pulse, setPulse] = useState(0);
   const [message, setMessage] = useState("कोई key दबाओ • Press any animal key!");
-  const [toddlerGame, setToddlerGame] = useState<ToddlerGame>("hello");
+  const [toddlerGame, setToddlerGame] = useState<ToddlerGame>("smash");
   const [revealed, setRevealed] = useState<number | null>(null);
+  const [bursts, setBursts] = useState<Burst[]>([]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const burstId = useRef(0);
+  const lastTrail = useRef(0);
 
   useEffect(() => {
     const saved = window.localStorage.getItem("khelkatha-age") as AgeGroup | null;
-    if (saved && saved in ageOptions) setAge(saved);
+    if (saved && saved in ageOptions) {
+      setAge(saved);
+      if (saved === "1") {
+        setToddlerGame("smash");
+        setMessage("कहीं भी छूओ! • Tap anywhere!");
+      }
+    }
     else setShowAge(true);
   }, []);
 
@@ -47,7 +57,7 @@ export default function Home() {
       const audio = new Audio(`./sounds/${animals[index].audio}`);
       audio.volume = .9;
       audioRef.current = audio;
-      void audio.play();
+      void audio.play().catch(() => { /* browsers may block sound until the first physical tap */ });
       if (index === 2 || index === 3) window.setTimeout(() => audio.pause(), 2800);
     } catch { /* visual play continues if audio is unavailable */ }
   }, []);
@@ -75,9 +85,22 @@ export default function Home() {
     }
   }, [challenge, mode, playAnimalSound]);
 
+  const addBurst = useCallback((x: number, y: number, animal: number, kind: Burst["kind"] = "animal") => {
+    const id = ++burstId.current;
+    setBursts((current) => [...current.slice(-14), { id, x, y, animal, kind }]);
+    window.setTimeout(() => setBursts((current) => current.filter((burst) => burst.id !== id)), kind === "animal" ? 1450 : 700);
+  }, []);
+
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
       if (event.repeat || showAge) return;
+      if (age === "1" && toddlerGame === "smash") {
+        event.preventDefault();
+        const index = Math.floor(Math.random() * animals.length);
+        addBurst(12 + Math.random() * 76, 18 + Math.random() * 65, index);
+        triggerAnimal(index);
+        return;
+      }
       const index = animals.findIndex((animal) => animal.key.toLowerCase() === event.key.toLowerCase());
       if (index >= 0) {
         event.preventDefault();
@@ -86,13 +109,14 @@ export default function Home() {
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [showAge, triggerAnimal]);
+  }, [addBurst, age, showAge, toddlerGame, triggerAnimal]);
 
   function chooseAge(value: AgeGroup) {
     setAge(value);
     setShowAge(false);
     setMode(value === "1" ? "free" : "challenge");
-    setMessage(value === "1" ? "जानवर को छूओ • Tap an animal!" : `${animals[challenge].sound} कौन बोलता है?`);
+    setToddlerGame("smash");
+    setMessage(value === "1" ? "कहीं भी छूओ! • Tap anywhere!" : `${animals[challenge].sound} कौन बोलता है?`);
     window.localStorage.setItem("khelkatha-age", value);
   }
 
@@ -105,7 +129,7 @@ export default function Home() {
     setToddlerGame(value);
     setActiveAnimal(null);
     setRevealed(null);
-    setMessage(value === "hello" ? "जानवर को छूओ!" : value === "peek" ? "पत्ते के पीछे कौन है?" : "किसको नचाएँ?");
+    setMessage(value === "smash" ? "कहीं भी छूओ!" : value === "hello" ? "जानवर को छूओ!" : value === "peek" ? "पत्ते के पीछे कौन है?" : "किसको नचाएँ?");
   }
 
   return (
@@ -137,6 +161,7 @@ export default function Home() {
         {age === "1" ? (
           <div className="toddler-world">
             <nav className="toddler-games" aria-label="Games for one year olds">
+              <button className={toddlerGame === "smash" ? "active" : ""} onClick={() => chooseToddlerGame("smash")}><span>✨</span><b>Animal Smash</b></button>
               <button className={toddlerGame === "hello" ? "active" : ""} onClick={() => chooseToddlerGame("hello")}><span>👋</span><b>Animal Hello</b></button>
               <button className={toddlerGame === "peek" ? "active" : ""} onClick={() => chooseToddlerGame("peek")}><span>🍃</span><b>Peekaboo</b></button>
               <button className={toddlerGame === "dance" ? "active" : ""} onClick={() => chooseToddlerGame("dance")}><span>🎵</span><b>Dance Party</b></button>
@@ -144,6 +169,27 @@ export default function Home() {
 
             <div className={`toddler-card game-${toddlerGame}`}>
               <div className="toddler-prompt" role="status">{message}</div>
+              {toddlerGame === "smash" && <div
+                className="smash-field"
+                aria-label="Tap, swipe, click or press any key to make animals appear"
+                onPointerDown={(event) => {
+                  const box = event.currentTarget.getBoundingClientRect();
+                  const index = Math.floor(Math.random() * animals.length);
+                  addBurst(((event.clientX - box.left) / box.width) * 100, ((event.clientY - box.top) / box.height) * 100, index);
+                  triggerAnimal(index);
+                }}
+                onPointerMove={(event) => {
+                  if (Date.now() - lastTrail.current < 75) return;
+                  lastTrail.current = Date.now();
+                  const box = event.currentTarget.getBoundingClientRect();
+                  addBurst(((event.clientX - box.left) / box.width) * 100, ((event.clientY - box.top) / box.height) * 100, 0, "spark");
+                }}
+              >
+                <div className="meadow-sun">☀️</div><div className="meadow-cloud one">☁️</div><div className="meadow-cloud two">☁️</div>
+                <div className="smash-invite"><span>☝️</span><b>Tap • Swipe • Smash keys</b></div>
+                {bursts.map((burst) => burst.kind === "spark" ? <span key={burst.id} className="finger-spark" style={{ left: `${burst.x}%`, top: `${burst.y}%` }}>✦</span> : <span key={burst.id} className="smash-burst" style={{ left: `${burst.x}%`, top: `${burst.y}%`, "--burst-colour": animals[burst.animal].colour } as React.CSSProperties}><i>★ ● ✦</i><b>{animals[burst.animal].emoji}</b><small>{animals[burst.animal].hindi}</small></span>)}
+                <div className="meadow-ground">🌼　🌱　🌸　🌿　🌻　🌱　🌼</div>
+              </div>}
               {toddlerGame === "hello" && <div className="toddler-animal-grid">
                 {animals.map((animal, index) => <button key={animal.key} className={activeAnimal === index ? "playing" : ""} style={{ "--animal-colour": animal.colour } as React.CSSProperties} onClick={() => triggerAnimal(index)} aria-label={`Hear a real ${animal.name}`}><span>{animal.emoji}</span><b>{animal.hindi}</b></button>)}
               </div>}
