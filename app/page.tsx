@@ -39,6 +39,7 @@ export default function Home() {
   const [ballPosition, setBallPosition] = useState({ x: 50, y: 55 });
   const [scratchMarks, setScratchMarks] = useState<{ id: number; x: number; y: number }[]>([]);
   const [birdPosition, setBirdPosition] = useState({ x: 68, y: 42 });
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const burstId = useRef(0);
   const lastTrail = useRef(0);
@@ -54,6 +55,12 @@ export default function Home() {
       }
     }
     else setShowAge(true);
+  }, []);
+
+  useEffect(() => {
+    const syncFullscreen = () => setIsFullscreen(Boolean(document.fullscreenElement));
+    document.addEventListener("fullscreenchange", syncFullscreen);
+    return () => document.removeEventListener("fullscreenchange", syncFullscreen);
   }, []);
 
   const playAnimalSound = useCallback((index: number) => {
@@ -160,8 +167,17 @@ export default function Home() {
     } catch { /* animal audio still plays */ }
   }
 
+  async function toggleFullscreen() {
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+      else await document.documentElement.requestFullscreen({ navigationUI: "hide" });
+    } catch {
+      setMessage("Fullscreen उपलब्ध नहीं • Use Add to Home Screen");
+    }
+  }
+
   return (
-    <main className={`app-shell age-${age ?? "4-5"}`}>
+    <main className={`app-shell age-${age ?? "4-5"} ${isFullscreen ? "is-fullscreen" : ""}`}>
       <header className="play-header">
         <a className="brand" href="#play" aria-label="KhelKatha home">
           <span className="brand-mark">क</span>
@@ -171,7 +187,10 @@ export default function Home() {
           <span>आज के सितारे</span>
           <b>{Array.from({ length: Math.min(stars, 5) }).map((_, i) => <span key={i}>★</span>)}{stars === 0 && "☆ ☆ ☆"}</b>
         </div>
-        <button className="age-pill" onClick={() => setShowAge(true)}>{ageOptions[age ?? "4-5"].icon} {ageOptions[age ?? "4-5"].label}⌄</button>
+        <div className="header-actions">
+          {age === "1" && <button className="fullscreen-button" onClick={toggleFullscreen} aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}>{isFullscreen ? "✕ Exit" : "⛶ Fullscreen"}</button>}
+          <button className="age-pill" onClick={() => setShowAge(true)}>{ageOptions[age ?? "4-5"].icon} {ageOptions[age ?? "4-5"].label}⌄</button>
+        </div>
       </header>
 
       <section className={`sound-lab ${age === "1" ? "toddler-lab" : ""}`} id="play">
