@@ -20,7 +20,7 @@ const animals = [
   { key: "H", emoji: "🦜", name: "Tota", hindi: "तोता", sound: "चीं-चीं!", colour: "#69b84a", x: "91%", audio: "parrot.ogg" },
 ];
 
-type ToddlerGame = "smash" | "hello" | "peek" | "dance";
+type ToddlerGame = "smash" | "bubbles" | "ball" | "scratch" | "piano" | "catch" | "hello" | "peek" | "dance";
 type Burst = { id: number; x: number; y: number; animal: number; kind: "animal" | "spark" };
 
 export default function Home() {
@@ -35,9 +35,14 @@ export default function Home() {
   const [toddlerGame, setToddlerGame] = useState<ToddlerGame>("smash");
   const [revealed, setRevealed] = useState<number | null>(null);
   const [bursts, setBursts] = useState<Burst[]>([]);
+  const [poppedBubbles, setPoppedBubbles] = useState<number[]>([]);
+  const [ballPosition, setBallPosition] = useState({ x: 50, y: 55 });
+  const [scratchMarks, setScratchMarks] = useState<{ id: number; x: number; y: number }[]>([]);
+  const [birdPosition, setBirdPosition] = useState({ x: 68, y: 42 });
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const burstId = useRef(0);
   const lastTrail = useRef(0);
+  const markId = useRef(0);
 
   useEffect(() => {
     const saved = window.localStorage.getItem("khelkatha-age") as AgeGroup | null;
@@ -129,7 +134,30 @@ export default function Home() {
     setToddlerGame(value);
     setActiveAnimal(null);
     setRevealed(null);
-    setMessage(value === "smash" ? "कहीं भी छूओ!" : value === "hello" ? "जानवर को छूओ!" : value === "peek" ? "पत्ते के पीछे कौन है?" : "किसको नचाएँ?");
+    const prompts: Record<ToddlerGame, string> = {
+      smash: "कहीं भी छूओ!", bubbles: "बुलबुले फोड़ो!", ball: "गेंद को घुमाओ!",
+      scratch: "उंगली घुमाओ!", piano: "सुर बजाओ!", catch: "तोता पकड़ो!",
+      hello: "जानवर को छूओ!", peek: "पत्ते के पीछे कौन है?", dance: "किसको नचाएँ?",
+    };
+    setMessage(prompts[value]);
+  }
+
+  function playNote(index: number) {
+    triggerAnimal(index % animals.length);
+    try {
+      const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!AudioContextClass) return;
+      const context = new AudioContextClass();
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      oscillator.type = "sine";
+      oscillator.frequency.value = [262, 294, 330, 349, 392, 440, 494, 523][index];
+      gain.gain.setValueAtTime(.16, context.currentTime);
+      gain.gain.exponentialRampToValueAtTime(.001, context.currentTime + .45);
+      oscillator.connect(gain).connect(context.destination);
+      oscillator.start(); oscillator.stop(context.currentTime + .46);
+      window.setTimeout(() => void context.close(), 550);
+    } catch { /* animal audio still plays */ }
   }
 
   return (
@@ -162,6 +190,11 @@ export default function Home() {
           <div className="toddler-world">
             <nav className="toddler-games" aria-label="Games for one year olds">
               <button className={toddlerGame === "smash" ? "active" : ""} onClick={() => chooseToddlerGame("smash")}><span>✨</span><b>Animal Smash</b></button>
+              <button className={toddlerGame === "bubbles" ? "active" : ""} onClick={() => chooseToddlerGame("bubbles")}><span>🫧</span><b>Bubble Pop</b></button>
+              <button className={toddlerGame === "ball" ? "active" : ""} onClick={() => chooseToddlerGame("ball")}><span>🟠</span><b>Bouncy Gend</b></button>
+              <button className={toddlerGame === "scratch" ? "active" : ""} onClick={() => chooseToddlerGame("scratch")}><span>🎨</span><b>Rangoli Scratch</b></button>
+              <button className={toddlerGame === "piano" ? "active" : ""} onClick={() => chooseToddlerGame("piano")}><span>🎹</span><b>Animal Piano</b></button>
+              <button className={toddlerGame === "catch" ? "active" : ""} onClick={() => chooseToddlerGame("catch")}><span>🦜</span><b>Catch Tota</b></button>
               <button className={toddlerGame === "hello" ? "active" : ""} onClick={() => chooseToddlerGame("hello")}><span>👋</span><b>Animal Hello</b></button>
               <button className={toddlerGame === "peek" ? "active" : ""} onClick={() => chooseToddlerGame("peek")}><span>🍃</span><b>Peekaboo</b></button>
               <button className={toddlerGame === "dance" ? "active" : ""} onClick={() => chooseToddlerGame("dance")}><span>🎵</span><b>Dance Party</b></button>
@@ -189,6 +222,41 @@ export default function Home() {
                 <div className="smash-invite"><span>☝️</span><b>Tap • Swipe • Smash keys</b></div>
                 {bursts.map((burst) => burst.kind === "spark" ? <span key={burst.id} className="finger-spark" style={{ left: `${burst.x}%`, top: `${burst.y}%` }}>✦</span> : <span key={burst.id} className="smash-burst" style={{ left: `${burst.x}%`, top: `${burst.y}%`, "--burst-colour": animals[burst.animal].colour } as React.CSSProperties}><i>★ ● ✦</i><b>{animals[burst.animal].emoji}</b><small>{animals[burst.animal].hindi}</small></span>)}
                 <div className="meadow-ground">🌼　🌱　🌸　🌿　🌻　🌱　🌼</div>
+              </div>}
+              {toddlerGame === "bubbles" && <div className="bubble-field">
+                {Array.from({ length: 9 }).map((_, index) => {
+                  const animalIndex = index % animals.length; const popped = poppedBubbles.includes(index);
+                  return <button key={index} className={popped ? "popped" : ""} onClick={() => { if (!popped) { setPoppedBubbles((current) => [...current, index]); triggerAnimal(animalIndex); } }} aria-label={`Pop bubble ${index + 1}`}><span>{popped ? animals[animalIndex].emoji : ""}</span></button>;
+                })}
+                {poppedBubbles.length === 9 && <button className="again-button" onClick={() => setPoppedBubbles([])}>फिर से! ↻</button>}
+              </div>}
+              {toddlerGame === "ball" && <div className="ball-field" onPointerDown={(event) => {
+                const box = event.currentTarget.getBoundingClientRect();
+                setBallPosition({ x: ((event.clientX - box.left) / box.width) * 100, y: ((event.clientY - box.top) / box.height) * 100 });
+              }} onPointerMove={(event) => {
+                if (!event.buttons) return; const box = event.currentTarget.getBoundingClientRect();
+                setBallPosition({ x: Math.max(8, Math.min(92, ((event.clientX - box.left) / box.width) * 100)), y: Math.max(14, Math.min(82, ((event.clientY - box.top) / box.height) * 100)) });
+              }}>
+                <span className="ball-animal">🐘</span><span className="ball-animal right">🐴</span>
+                <button className="bouncy-ball" style={{ left: `${ballPosition.x}%`, top: `${ballPosition.y}%` }} onPointerUp={() => triggerAnimal(ballPosition.x > 55 ? 0 : 1)} aria-label="Drag the bouncy ball">गेंद</button>
+                <div className="ball-grass">🌱🌼🌱🌼🌱🌼🌱</div>
+              </div>}
+              {toddlerGame === "scratch" && <div className="scratch-field" onPointerDown={(event) => {
+                const box = event.currentTarget.getBoundingClientRect(); setScratchMarks((marks) => [...marks.slice(-35), { id: ++markId.current, x: ((event.clientX - box.left) / box.width) * 100, y: ((event.clientY - box.top) / box.height) * 100 }]);
+              }} onPointerMove={(event) => {
+                if (!event.buttons) return; const box = event.currentTarget.getBoundingClientRect(); setScratchMarks((marks) => [...marks.slice(-35), { id: ++markId.current, x: ((event.clientX - box.left) / box.width) * 100, y: ((event.clientY - box.top) / box.height) * 100 }]);
+              }}>
+                <div className="rangoli-animal">🦁<b>शेर</b></div><div className="rangoli-cover" style={{ opacity: Math.max(.08, 1 - scratchMarks.length / 28) }}><span>✋</span></div>
+                {scratchMarks.map((mark) => <i key={mark.id} style={{ left: `${mark.x}%`, top: `${mark.y}%` }}>✦</i>)}
+                {scratchMarks.length > 20 && <button className="again-button" onClick={(event) => { event.stopPropagation(); setScratchMarks([]); triggerAnimal(2); }}>फिर रंगो! ↻</button>}
+              </div>}
+              {toddlerGame === "piano" && <div className="animal-piano">
+                <div className="piano-stage" key={pulse}>{activeAnimal === null ? "🎶" : animals[activeAnimal].emoji}</div>
+                <div className="piano-keys">{[0,1,2,3,4,5,0,1].map((animalIndex, note) => <button key={note} onClick={() => playNote(note)} style={{ "--key-colour": animals[animalIndex].colour } as React.CSSProperties} aria-label={`Play note ${note + 1}`}><span>{animals[animalIndex].emoji}</span><b>{note + 1}</b></button>)}</div>
+              </div>}
+              {toddlerGame === "catch" && <div className="catch-field">
+                <div className="catch-tree">🌳</div><div className="catch-clouds">☁️　☁️</div>
+                <button className="flying-tota" key={`${birdPosition.x}-${birdPosition.y}`} style={{ left: `${birdPosition.x}%`, top: `${birdPosition.y}%` }} onClick={() => { triggerAnimal(5); setStars((value) => value + 1); setBirdPosition({ x: 12 + Math.random() * 76, y: 20 + Math.random() * 58 }); }} aria-label="Catch the flying parrot">🦜<span>★</span></button>
               </div>}
               {toddlerGame === "hello" && <div className="toddler-animal-grid">
                 {animals.map((animal, index) => <button key={animal.key} className={activeAnimal === index ? "playing" : ""} style={{ "--animal-colour": animal.colour } as React.CSSProperties} onClick={() => triggerAnimal(index)} aria-label={`Hear a real ${animal.name}`}><span>{animal.emoji}</span><b>{animal.hindi}</b></button>)}
