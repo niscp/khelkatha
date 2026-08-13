@@ -45,7 +45,7 @@ export default function Home() {
   const [soundOn, setSoundOn] = useState(true);
   const [pulse, setPulse] = useState(0);
   const [message, setMessage] = useState("कोई key दबाओ • Press any animal key!");
-  const [toddlerGame, setToddlerGame] = useState<ToddlerGame>("smash");
+  const [toddlerGame, setToddlerGame] = useState<ToddlerGame>("show");
   const [revealed, setRevealed] = useState<number | null>(null);
   const [bursts, setBursts] = useState<Burst[]>([]);
   const [poppedBubbles, setPoppedBubbles] = useState<number[]>([]);
@@ -76,8 +76,8 @@ export default function Home() {
     if (saved && saved in ageOptions) {
       setAge(saved);
       if (saved === "1") {
-        setToddlerGame("smash");
-        setMessage("कहीं भी छूओ! • Tap anywhere!");
+        setToddlerGame("show");
+        setMessage("Gauri & friends are ready!");
       }
     }
     else setShowAge(true);
@@ -180,8 +180,8 @@ export default function Home() {
     setAge(value);
     setShowAge(false);
     setMode(value === "1" ? "free" : "challenge");
-    setToddlerGame("smash");
-    setMessage(value === "1" ? "कहीं भी छूओ! • Tap anywhere!" : `${animals[challenge].sound} कौन बोलता है?`);
+    setToddlerGame(value === "1" ? "show" : "smash");
+    setMessage(value === "1" ? "Gauri & friends are ready!" : `${animals[challenge].sound} कौन बोलता है?`);
     window.localStorage.setItem("wondertaps-age", value);
   }
 
@@ -327,11 +327,10 @@ export default function Home() {
             <div className={`toddler-card game-${toddlerGame}`}>
               <div className="toddler-prompt" role="status">{message}</div>
               {toddlerGame === "show" && <div className="character-cinema">
-                <div className="cinema-sky"><span>☁️</span><b>GAURI&apos;S ANIMAL SHOW</b><span>☁️</span></div>
-                <div className="cinema-stars">✦　★　✦　★　✦</div>
+                <img className="cinema-world" src="./gauri-animal-world.png" alt="Gauri's horse, elephant, lion, monkey, cow and parrot friends in a magical garden" />
+                <div className="cinema-title"><small>Now playing</small><b>Gauri &amp; friends</b></div>
                 <button className="gauri-host" onClick={() => { setMessage("Hi Gauri! Chalo animals ke saath khelein!"); playPraise(); }} aria-label="Gauri, host of the animal show"><img src="./gauri-character.png" alt="Cartoon Gauri waving and hosting her animal show" /><b>Gauri</b></button>
                 <div className="cinema-cast">{animals.map((animal, index) => <button key={animal.key} className={activeAnimal === index ? "star" : ""} onClick={() => triggerAnimal(index)} style={{ "--cast-colour": animal.colour, "--cast-delay": `${index * .12}s` } as React.CSSProperties}><span>{animal.emoji}</span><b>{animalName(index)}</b></button>)}</div>
-                <div className="cinema-ground">🌼　🌿　🌸　🌱　🌻　🌿　🌼</div>
                 <button className="show-control" onClick={() => setShowPlaying((value) => !value)}>{showPlaying ? "⏸ Pause show" : "▶ Play full show"}</button>
               </div>}
               {toddlerGame === "smash" && <div
