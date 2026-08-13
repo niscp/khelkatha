@@ -41,6 +41,8 @@ export default function Home() {
   const [mode, setMode] = useState<"free" | "challenge">("free");
   const [challenge, setChallenge] = useState(2);
   const [stars, setStars] = useState(0);
+  const [sessionTaps, setSessionTaps] = useState(0);
+  const [soundOn, setSoundOn] = useState(true);
   const [pulse, setPulse] = useState(0);
   const [message, setMessage] = useState("कोई key दबाओ • Press any animal key!");
   const [toddlerGame, setToddlerGame] = useState<ToddlerGame>("smash");
@@ -104,6 +106,7 @@ export default function Home() {
   }, []);
 
   const playAnimalSound = useCallback((index: number) => {
+    if (!soundOn) return;
     try {
       audioRef.current?.pause();
       const audio = new Audio(`./sounds/${animals[index].audio}`);
@@ -112,12 +115,13 @@ export default function Home() {
       void audio.play().catch(() => { /* browsers may block sound until the first physical tap */ });
       if (index === 2 || index === 3) window.setTimeout(() => audio.pause(), 2800);
     } catch { /* visual play continues if audio is unavailable */ }
-  }, []);
+  }, [soundOn]);
 
   const triggerAnimal = useCallback((index: number) => {
     const animal = animals[index];
     setActiveAnimal(index);
     setPulse((value) => value + 1);
+    setSessionTaps((value) => value + 1);
     playAnimalSound(index);
 
     if (mode === "challenge") {
@@ -267,10 +271,12 @@ export default function Home() {
         <div className="header-center" aria-label="Activity progress">
           <span>{words.stars}</span>
           <b>{Array.from({ length: Math.min(stars, 5) }).map((_, i) => <span key={i}>★</span>)}{stars === 0 && "☆ ☆ ☆"}</b>
+          <i>{sessionTaps} taps</i>
         </div>
         <div className="header-actions">
           <div className="language-switch" aria-label="Choose language">{(["hi", "en", "hinglish"] as Language[]).map((value) => <button key={value} className={language === value ? "active" : ""} onClick={() => chooseLanguage(value)} lang={value === "hinglish" ? "en-IN" : value}>{languageLabels[value]}</button>)}</div>
           {age === "1" && <button className="family-button" onClick={() => setShowFamily(true)}>👪 {words.family}</button>}
+          <button className="sound-button" onClick={() => setSoundOn((value) => !value)} aria-label={soundOn ? "Mute sounds" : "Turn sounds on"} aria-pressed={!soundOn}>{soundOn ? "🔊" : "🔇"}</button>
           <button className="fullscreen-button" onClick={toggleFullscreen} aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}>{isFullscreen ? `✕ ${words.exit}` : `⛶ ${words.fullscreen}`}</button>
           <button className="age-pill" onClick={() => setShowAge(true)}>{ageOptions[age ?? "4-5"].icon} {ageOptions[age ?? "4-5"].label}⌄</button>
         </div>
@@ -428,9 +434,11 @@ export default function Home() {
       {showAge && (
         <div className="age-overlay" role="dialog" aria-modal="true" aria-labelledby="age-title">
           <div className="age-dialog">
+            <div className="welcome-orbit" aria-hidden="true"><span>🐴</span><span>🐘</span><b>W</b><span>🦜</span><span>🦁</span></div>
             <span className="eyebrow">{words.ageSetup}</span>
             <h2 id="age-title">{words.ageQuestion}</h2>
             <p>{words.ageNote}</p>
+            <div className="setup-language" aria-label="Choose site language">{(["hi", "en", "hinglish"] as Language[]).map((value) => <button key={value} className={language === value ? "active" : ""} onClick={() => chooseLanguage(value)}>{languageLabels[value]}</button>)}</div>
             <div className="age-options">
               {(Object.keys(ageOptions) as AgeGroup[]).map((value) => (
                 <button key={value} onClick={() => chooseAge(value)}>

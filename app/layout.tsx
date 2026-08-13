@@ -6,9 +6,11 @@ export const metadata: Metadata = {
   title: "WonderTaps — Play, listen and learn",
   description: "An animated Hindi, English and Hinglish learning playground for children ages 1–7.",
   alternates: { canonical: "/" },
+  manifest: "./manifest.webmanifest",
+  appleWebApp: { capable: true, title: "WonderTaps", statusBarStyle: "black-translucent" },
   icons: {
-    icon: "/favicon.svg",
-    shortcut: "/favicon.svg",
+    icon: "./favicon.svg",
+    shortcut: "./favicon.svg",
   },
 };
 
