@@ -329,6 +329,7 @@ export default function Home() {
               {toddlerGame === "show" && <div className="character-cinema">
                 <div className="cinema-sky"><span>☁️</span><b>GAURI&apos;S ANIMAL SHOW</b><span>☁️</span></div>
                 <div className="cinema-stars">✦　★　✦　★　✦</div>
+                <button className="gauri-host" onClick={() => { setMessage("Hi Gauri! Chalo animals ke saath khelein!"); playPraise(); }} aria-label="Gauri, host of the animal show"><img src="./gauri-character.png" alt="Cartoon Gauri waving and hosting her animal show" /><b>Gauri</b></button>
                 <div className="cinema-cast">{animals.map((animal, index) => <button key={animal.key} className={activeAnimal === index ? "star" : ""} onClick={() => triggerAnimal(index)} style={{ "--cast-colour": animal.colour, "--cast-delay": `${index * .12}s` } as React.CSSProperties}><span>{animal.emoji}</span><b>{animalName(index)}</b></button>)}</div>
                 <div className="cinema-ground">🌼　🌿　🌸　🌱　🌻　🌿　🌼</div>
                 <button className="show-control" onClick={() => setShowPlaying((value) => !value)}>{showPlaying ? "⏸ Pause show" : "▶ Play full show"}</button>

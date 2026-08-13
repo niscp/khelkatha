@@ -125,6 +125,9 @@ footer { padding:28px 5vw; display:flex; justify-content:space-between; gap:25px
 @media(max-width:900px){
   .play-header{grid-template-columns:1fr auto}.header-center{display:none}.sound-lab{padding-inline:20px}.lab-intro{align-items:flex-start}.stage-wrap{aspect-ratio:16/10}.keyboard-row{grid-template-columns:repeat(3,1fr)}.parent-note{grid-template-columns:1fr 1fr}.safe-stamp{max-width:180px}.how-it-learns{grid-template-columns:repeat(2,1fr);gap:25px}.how-it-learns>div:nth-child(2){border:0}.age-options{grid-template-columns:repeat(2,1fr)}
 }
+.gauri-host{position:absolute;z-index:4;left:50%;bottom:7%;transform:translateX(-50%);width:20%;height:72%;border:0;background:transparent;filter:drop-shadow(0 10px 8px #151232aa);animation:gauri-host-arrive 1s .35s cubic-bezier(.2,.9,.2,1.2) both}.gauri-host img{width:100%;height:100%;object-fit:contain}.gauri-host>b{position:absolute;left:50%;bottom:2%;transform:translateX(-50%);padding:5px 13px;border:3px solid var(--ink);border-radius:999px;background:var(--mango);box-shadow:3px 4px 0 var(--ink)}.gauri-host:active{transform:translateX(-50%) scale(.96)}
+@keyframes gauri-host-arrive{from{opacity:0;transform:translate(-50%,120px) scale(.65)}to{opacity:1;transform:translate(-50%,0) scale(1)}}
+@media(max-width:600px){.gauri-host{width:37%;height:64%;bottom:12%}.gauri-host>b{font-size:9px}}
 @media(max-width:600px){
   .game-show{padding:0}.cinema-cast{left:1%;right:1%;gap:1px;bottom:20%}.cinema-cast button{min-width:0;width:16%;padding:5px 1px;border-width:2px}.cinema-cast span{font-size:47px}.cinema-cast b{font-size:8px;padding:3px 1px}.cinema-sky{top:72px;font-size:28px}.cinema-sky b{font-size:8px;padding:6px 9px}.cinema-stars{top:31%;font-size:20px}.cinema-ground{font-size:26px}.show-control{right:10px;bottom:12px;font-size:10px;padding:9px 12px}
   .language-switch{box-shadow:none}.language-switch button{padding:5px 6px;font-size:8px}
