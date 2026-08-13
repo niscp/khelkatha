@@ -29,7 +29,7 @@ const animals = [
   { key: "H", emoji: "🦜", name: "Tota", english: "Parrot", hindi: "तोता", sound: "चीं-चीं!", colour: "#69b84a", x: "91%", audio: "parrot.ogg" },
 ];
 
-type ToddlerGame = "smash" | "bubbles" | "ball" | "scratch" | "piano" | "catch" | "family" | "hello" | "peek" | "dance";
+type ToddlerGame = "show" | "smash" | "bubbles" | "ball" | "scratch" | "piano" | "catch" | "family" | "hello" | "peek" | "dance";
 type Burst = { id: number; x: number; y: number; animal: number; kind: "animal" | "spark" };
 type FamilyMember = { name: string; photo: string };
 
@@ -54,13 +54,14 @@ export default function Home() {
   const [birdPosition, setBirdPosition] = useState({ x: 68, y: 42 });
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showFamily, setShowFamily] = useState(false);
-  const [childName, setChildName] = useState("");
+  const [childName, setChildName] = useState("Gauri");
   const [nickname, setNickname] = useState("");
   const [favouriteColour, setFavouriteColour] = useState("#ef6654");
   const [family, setFamily] = useState<FamilyMember[]>([]);
   const [familyReveal, setFamilyReveal] = useState<number | null>(null);
   const [praiseAudio, setPraiseAudio] = useState("");
   const [isRecording, setIsRecording] = useState(false);
+  const [showPlaying, setShowPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const burstId = useRef(0);
   const lastTrail = useRef(0);
@@ -83,7 +84,7 @@ export default function Home() {
     try {
       const profile = JSON.parse(window.localStorage.getItem("wondertaps-family") || window.localStorage.getItem("khelkatha-family") || "null");
       if (profile) {
-        setChildName(profile.childName || ""); setNickname(profile.nickname || "");
+        setChildName(profile.childName || "Gauri"); setNickname(profile.nickname || "");
         setFavouriteColour(profile.favouriteColour || "#ef6654"); setFamily(profile.family || []);
         setPraiseAudio(profile.praiseAudio || "");
       }
@@ -148,6 +149,14 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    if (!showPlaying || toddlerGame !== "show") return;
+    let index = 0;
+    triggerAnimal(index);
+    const timer = window.setInterval(() => { index = (index + 1) % animals.length; triggerAnimal(index); }, 2100);
+    return () => window.clearInterval(timer);
+  }, [showPlaying, toddlerGame, triggerAnimal]);
+
+  useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
       if (event.repeat || showAge) return;
       if (age === "1" && toddlerGame === "smash") {
@@ -186,11 +195,16 @@ export default function Home() {
     setActiveAnimal(null);
     setRevealed(null);
     const prompts: Record<ToddlerGame, string> = {
-      smash: "कहीं भी छूओ!", bubbles: "बुलबुले फोड़ो!", ball: "गेंद को घुमाओ!",
+      show: "Gauri का Animal Show!", smash: "कहीं भी छूओ!", bubbles: "बुलबुले फोड़ो!", ball: "गेंद को घुमाओ!",
       scratch: "उंगली घुमाओ!", piano: "सुर बजाओ!", catch: "तोता पकड़ो!", family: "कौन छुपा है?",
       hello: "जानवर को छूओ!", peek: "पत्ते के पीछे कौन है?", dance: "किसको नचाएँ?",
     };
     setMessage(prompts[value]);
+  }
+
+  async function startCharacterShow() {
+    setToddlerGame("show"); setShowPlaying(true); setMessage(`${nickname || childName || "Gauri"}, your animal friends are here!`);
+    try { if (!document.fullscreenElement) await document.documentElement.requestFullscreen({ navigationUI: "hide" }); } catch { /* show still plays inline */ }
   }
 
   function playNote(index: number) {
@@ -286,7 +300,7 @@ export default function Home() {
         <div className="lab-intro">
           <div>
             <span className="eyebrow">{age === "1" ? words.littleHands : words.orchestra}</span>
-            <h1>{age === "1" ? words.toddlerTitle : words.olderTitle}</h1>
+            <h1>{age === "1" ? <>{nickname || childName || "Gauri"}, this is<br /><em>your wonder world!</em></> : words.olderTitle}</h1>
           </div>
           {age !== "1" && <div className="mode-switch" aria-label="Choose play mode">
             <button className={mode === "free" ? "active" : ""} onClick={() => changeMode("free")}>🎹 {words.freePlay}</button>
@@ -297,6 +311,7 @@ export default function Home() {
         {age === "1" ? (
           <div className="toddler-world">
             <nav className="toddler-games" aria-label="Games for one year olds">
+              <button className={`character-show-tab ${toddlerGame === "show" ? "active" : ""}`} onClick={startCharacterShow}><span>🎬</span><b>Gauri&apos;s Show</b></button>
               <button className={toddlerGame === "smash" ? "active" : ""} onClick={() => chooseToddlerGame("smash")}><span>✨</span><b>{words.smash}</b></button>
               <button className={toddlerGame === "bubbles" ? "active" : ""} onClick={() => chooseToddlerGame("bubbles")}><span>🫧</span><b>{words.bubbles}</b></button>
               <button className={toddlerGame === "ball" ? "active" : ""} onClick={() => chooseToddlerGame("ball")}><span>🟠</span><b>{words.ball}</b></button>
@@ -311,6 +326,13 @@ export default function Home() {
 
             <div className={`toddler-card game-${toddlerGame}`}>
               <div className="toddler-prompt" role="status">{message}</div>
+              {toddlerGame === "show" && <div className="character-cinema">
+                <div className="cinema-sky"><span>☁️</span><b>GAURI&apos;S ANIMAL SHOW</b><span>☁️</span></div>
+                <div className="cinema-stars">✦　★　✦　★　✦</div>
+                <div className="cinema-cast">{animals.map((animal, index) => <button key={animal.key} className={activeAnimal === index ? "star" : ""} onClick={() => triggerAnimal(index)} style={{ "--cast-colour": animal.colour, "--cast-delay": `${index * .12}s` } as React.CSSProperties}><span>{animal.emoji}</span><b>{animalName(index)}</b></button>)}</div>
+                <div className="cinema-ground">🌼　🌿　🌸　🌱　🌻　🌿　🌼</div>
+                <button className="show-control" onClick={() => setShowPlaying((value) => !value)}>{showPlaying ? "⏸ Pause show" : "▶ Play full show"}</button>
+              </div>}
               {toddlerGame === "smash" && <div
                 className="smash-field"
                 aria-label="Tap, swipe, click or press any key to make animals appear"
