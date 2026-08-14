@@ -316,10 +316,10 @@ export default function Home() {
         {age === "1" ? (
           <div className="toddler-world">
             <nav className="toddler-games" aria-label="Games for one year olds">
-              <button className={`character-show-tab ${toddlerGame === "show" ? "active" : ""}`} onClick={startCharacterShow}><span>🎬</span><b>Gauri&apos;s Show</b></button>
-              <button className={toddlerGame === "fireflies" ? "active" : ""} onClick={() => chooseToddlerGame("fireflies")}><span>🌟</span><b>Glow Garden</b></button>
-              <button className={toddlerGame === "soundmatch" ? "active" : ""} onClick={() => chooseToddlerGame("soundmatch")}><span>👂</span><b>Who Called?</b></button>
-              <button className={toddlerGame === "parade" ? "active" : ""} onClick={() => chooseToddlerGame("parade")}><span>🥁</span><b>Animal Parade</b></button>
+              <button aria-label="Gauri's Show" className={`character-show-tab ${toddlerGame === "show" ? "active" : ""}`} onClick={startCharacterShow}><span>🎬</span><b>Gauri</b></button>
+              <button aria-label="Glow Garden" className={toddlerGame === "fireflies" ? "active" : ""} onClick={() => chooseToddlerGame("fireflies")}><span>🌟</span><b>Glow</b></button>
+              <button aria-label="Who Called?" className={toddlerGame === "soundmatch" ? "active" : ""} onClick={() => chooseToddlerGame("soundmatch")}><span>👂</span><b>Listen</b></button>
+              <button aria-label="Animal Parade" className={toddlerGame === "parade" ? "active" : ""} onClick={() => chooseToddlerGame("parade")}><span>🥁</span><b>Parade</b></button>
               {family.some((member) => member?.photo) && <button className={toddlerGame === "family" ? "active" : ""} onClick={() => chooseToddlerGame("family")}><span>👪</span><b>{words.myFamily}</b></button>}
             </nav>
 

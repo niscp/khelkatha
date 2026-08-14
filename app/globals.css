@@ -167,6 +167,25 @@ body{background:#f7f7f4;font-family:"Avenir Next","Inter","Trebuchet MS",sans-se
   .toddler-lab .lab-intro{margin-bottom:18px}.toddler-games{gap:7px}.toddler-games button{flex-basis:104px;min-height:68px;display:grid;place-items:center;align-content:center;gap:1px;padding:4px;font-size:9px}.toddler-games button span{font-size:23px}.toddler-card{min-height:480px;padding:76px 12px 14px;border-radius:25px}.toddler-card.game-smash,.toddler-card.game-bubbles,.toddler-card.game-ball,.toddler-card.game-scratch,.toddler-card.game-piano,.toddler-card.game-catch{padding:0}.toddler-prompt{top:16px;padding:9px 15px;font-size:16px}.toddler-animal-grid{grid-template-columns:repeat(2,1fr);gap:10px}.toddler-animal-grid button{min-height:124px;border-width:3px}.toddler-animal-grid button span{font-size:60px}.toddler-animal-grid button b{font-size:16px}.peek-grid{grid-template-columns:1fr;gap:10px;min-height:400px}.peek-grid button{min-height:112px;border-radius:58px 58px 20px 20px}.peek-grid .leaf{font-size:72px}.peek-grid .peek-animal{font-size:65px}.peek-grid b{position:absolute;right:18px;bottom:12px}.dance-floor{min-height:390px}.dance-star{width:190px;font-size:105px}.dance-choices{gap:10px}.dance-choices button{width:80px;font-size:43px}.toddler-note{font-size:11px;line-height:1.5}.smash-burst{width:115px}.smash-burst>b{font-size:61px}.meadow-ground{font-size:32px;letter-spacing:2px}.meadow-sun{font-size:58px}.meadow-cloud{font-size:60px}.smash-invite span{font-size:58px}.smash-invite b{font-size:15px}.bubble-field{padding:78px 8px 12px;gap:7px}.bubble-field>button:not(.again-button){font-size:40px}.ball-animal{font-size:78px}.bouncy-ball{width:90px}.ball-grass{font-size:27px;letter-spacing:3px}.rangoli-animal{font-size:155px}.rangoli-cover span{font-size:68px}.animal-piano{padding:75px 8px 12px;grid-template-rows:1fr 155px}.piano-stage{font-size:112px}.piano-keys{gap:2px}.piano-keys button{border-width:2px;font-size:20px}.piano-keys b{font-size:10px;width:19px;height:19px}.catch-tree{font-size:160px}.catch-clouds{font-size:45px}.flying-tota{width:95px;font-size:56px}.is-fullscreen .play-header{height:58px}.is-fullscreen .sound-lab{min-height:calc(100vh - 58px);padding:8px}.is-fullscreen .toddler-games button{min-height:54px}.is-fullscreen .toddler-card{min-height:calc(100vh - 130px);border-radius:20px}
 }
 
+/* Small phones, notches and phone landscape */
+@media(max-width:360px){
+  .age-1 .play-header{padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}
+  .age-1 .brand{font-size:14px}.age-1 .brand-mark{width:34px;height:34px}
+  .age-1 .age-pill{padding:7px;font-size:9px}.age-1 .sound-button{width:34px;height:34px}
+  .age-1 .toddler-games{width:calc(100% - 16px);bottom:max(6px,env(safe-area-inset-bottom));padding:4px;border-radius:18px}
+  .age-1 .toddler-games button{min-height:56px;font-size:10px}.age-1 .toddler-games button span{font-size:19px}
+  .age-1 .cinema-title b{font-size:23px}.age-1 .show-control{bottom:78px;right:10px}
+  .age-1 .glow-score{width:58px;height:58px;font-size:19px}.age-1 .glow-score small{font-size:7px}
+}
+@media(max-height:600px) and (orientation:landscape){
+  .age-1 .play-header{height:48px;padding:0 max(12px,env(safe-area-inset-left))}.age-1 .brand-mark{width:32px;height:32px}.age-1 .brand{font-size:14px}
+  .age-1 .sound-lab{padding-top:48px}.age-1 .lab-intro{display:none}.age-1 .toddler-card{min-height:calc(100svh - 48px);border-radius:0}
+  .age-1 .toddler-games{position:fixed;z-index:31;right:max(8px,env(safe-area-inset-right));left:auto;bottom:8px;transform:none;display:grid;grid-template-columns:repeat(2,64px);width:auto;margin:0;padding:4px;gap:3px;border-radius:18px;background:rgba(247,247,244,.9);backdrop-filter:blur(22px)}
+  .age-1 .toddler-games button{min-height:48px;min-width:0;padding:2px;font-size:8px;border-radius:14px}.age-1 .toddler-games button span{font-size:16px}
+  .age-1 .show-control{right:150px;bottom:12px}.age-1 .parade-lane{right:150px;bottom:8px}.age-1 .parade-beat{right:155px;top:10px}
+  .age-1 .how-it-learns,.age-1 .parent-note,.age-1 footer,.age-1 .fullscreen-button{display:none}
+}
+
 /* Toddler Play OS — the one-year-old view behaves like an app, not a webpage */
 .age-1 .toddler-card button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .age-1 .toddler-card button:active{filter:brightness(1.12);scale:.96}
