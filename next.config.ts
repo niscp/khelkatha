@@ -1,9 +1,11 @@
 import type { NextConfig } from "next";
 
 const isGitHubPages = process.env.GITHUB_ACTIONS === "true";
+const isEc2Static = process.env.DEPLOY_TARGET === "ec2";
+const isStaticExport = isGitHubPages || isEc2Static;
 
 const nextConfig: NextConfig = {
-  output: isGitHubPages ? "export" : undefined,
+  output: isStaticExport ? "export" : undefined,
   basePath: isGitHubPages ? "/khelkatha" : "",
   assetPrefix: isGitHubPages ? "/khelkatha/" : "",
   trailingSlash: true,
@@ -12,7 +14,7 @@ const nextConfig: NextConfig = {
   },
   typescript: {
     // The static Pages app does not import the Cloudflare-only db/worker files.
-    ignoreBuildErrors: isGitHubPages,
+    ignoreBuildErrors: isStaticExport,
   },
 };
 
