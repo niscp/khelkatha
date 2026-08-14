@@ -210,3 +210,14 @@ body{background:#f7f7f4;font-family:"Avenir Next","Inter","Trebuchet MS",sans-se
   .age-1 .fullscreen-button{display:none}
   .age-1 .how-it-learns,.age-1 .parent-note,.age-1 footer{display:none}
 }
+
+@media(max-height:600px) and (orientation:landscape){
+  .age-1 .play-header{position:fixed;inset:0 0 auto;z-index:30;height:48px}
+  .age-1 .sound-lab{min-height:100svh;padding:48px 0 0;background:#111827}
+  .age-1 .toddler-world{width:100%;max-width:none}
+  .age-1 .toddler-card{width:100%;min-height:calc(100svh - 48px);padding:0;border:0;border-radius:0;box-shadow:none}
+  .age-1 .toddler-prompt{top:8px;font-size:11px}
+  .age-1 .game-show .toddler-prompt{display:none}
+  .age-1 .cinema-title{top:12px;left:max(16px,env(safe-area-inset-left))}.age-1 .cinema-title b{font-size:24px}
+  .age-1 .gauri-host{height:72%;width:22%;bottom:0;left:22%}
+}
