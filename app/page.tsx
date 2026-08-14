@@ -269,6 +269,7 @@ export default function Home() {
   }
 
   function playPraise() { if (praiseAudio) void new Audio(praiseAudio).play().catch(() => {}); }
+  function haptic(pattern: number | number[] = 18) { if ("vibrate" in navigator) navigator.vibrate(pattern); }
 
   async function toggleFullscreen() {
     try {
@@ -319,16 +320,7 @@ export default function Home() {
               <button className={toddlerGame === "fireflies" ? "active" : ""} onClick={() => chooseToddlerGame("fireflies")}><span>🌟</span><b>Glow Garden</b></button>
               <button className={toddlerGame === "soundmatch" ? "active" : ""} onClick={() => chooseToddlerGame("soundmatch")}><span>👂</span><b>Who Called?</b></button>
               <button className={toddlerGame === "parade" ? "active" : ""} onClick={() => chooseToddlerGame("parade")}><span>🥁</span><b>Animal Parade</b></button>
-              <button className={toddlerGame === "smash" ? "active" : ""} onClick={() => chooseToddlerGame("smash")}><span>✨</span><b>{words.smash}</b></button>
-              <button className={toddlerGame === "bubbles" ? "active" : ""} onClick={() => chooseToddlerGame("bubbles")}><span>🫧</span><b>{words.bubbles}</b></button>
-              <button className={toddlerGame === "ball" ? "active" : ""} onClick={() => chooseToddlerGame("ball")}><span>🟠</span><b>{words.ball}</b></button>
-              <button className={toddlerGame === "scratch" ? "active" : ""} onClick={() => chooseToddlerGame("scratch")}><span>🎨</span><b>{words.scratch}</b></button>
-              <button className={toddlerGame === "piano" ? "active" : ""} onClick={() => chooseToddlerGame("piano")}><span>🎹</span><b>{words.piano}</b></button>
-              <button className={toddlerGame === "catch" ? "active" : ""} onClick={() => chooseToddlerGame("catch")}><span>🦜</span><b>{words.catch}</b></button>
               {family.some((member) => member?.photo) && <button className={toddlerGame === "family" ? "active" : ""} onClick={() => chooseToddlerGame("family")}><span>👪</span><b>{words.myFamily}</b></button>}
-              <button className={toddlerGame === "hello" ? "active" : ""} onClick={() => chooseToddlerGame("hello")}><span>👋</span><b>{words.hello}</b></button>
-              <button className={toddlerGame === "peek" ? "active" : ""} onClick={() => chooseToddlerGame("peek")}><span>🍃</span><b>{words.peek}</b></button>
-              <button className={toddlerGame === "dance" ? "active" : ""} onClick={() => chooseToddlerGame("dance")}><span>🎵</span><b>{words.dance}</b></button>
             </nav>
 
             <div className={`toddler-card game-${toddlerGame}`}>
@@ -336,27 +328,27 @@ export default function Home() {
               {toddlerGame === "show" && <div className="character-cinema">
                 <img className="cinema-world" src="./gauri-animal-world.png" alt="Gauri's horse, elephant, lion, monkey, cow and parrot friends in a magical garden" />
                 <div className="cinema-title"><small>Now playing</small><b>Gauri &amp; friends</b></div>
-                <button className="gauri-host" onClick={() => { setMessage("Hi Gauri! Chalo animals ke saath khelein!"); playPraise(); }} aria-label="Gauri, host of the animal show"><img src="./gauri-character.png" alt="Cartoon Gauri waving and hosting her animal show" /><b>Gauri</b></button>
+                <button className="gauri-host" onClick={() => { haptic([18, 30, 18]); setMessage("Hi Gauri! Chalo animals ke saath khelein!"); playPraise(); }} aria-label="Gauri, host of the animal show"><img src="./gauri-character.png" alt="Cartoon Gauri waving and hosting her animal show" /><b>Gauri</b></button>
                 <div className="cinema-cast">{animals.map((animal, index) => <button key={animal.key} className={activeAnimal === index ? "star" : ""} onClick={() => triggerAnimal(index)} style={{ "--cast-colour": animal.colour, "--cast-delay": `${index * .12}s` } as React.CSSProperties}><span>{animal.emoji}</span><b>{animalName(index)}</b></button>)}</div>
                 <button className="show-control" onClick={() => setShowPlaying((value) => !value)}>{showPlaying ? "⏸ Pause show" : "▶ Play full show"}</button>
               </div>}
               {toddlerGame === "fireflies" && <div className="firefly-garden">
                 <img src="./gauri-animal-world.png" alt="Magical garden with Gauri's animal friends" />
                 <img className="mini-gauri" src="./gauri-character.png" alt="Gauri catching glowing fireflies" />
-                {Array.from({ length: 10 }).map((_, index) => <button key={index} className={caughtFireflies.includes(index) ? "caught" : ""} style={{ "--fly-x": `${8 + ((index * 29) % 84)}%`, "--fly-y": `${12 + ((index * 37) % 64)}%`, "--fly-delay": `${index * -.31}s` } as React.CSSProperties} onClick={() => { if (caughtFireflies.includes(index)) return; setCaughtFireflies((current) => [...current, index]); playNote(index % 8); if (caughtFireflies.length === 9) { setStars((value) => value + 1); setMessage("You lit the whole garden, Gauri! ★"); } }} aria-label={`Catch glowing light ${index + 1}`}><span>✦</span></button>)}
+                {Array.from({ length: 10 }).map((_, index) => <button key={index} className={caughtFireflies.includes(index) ? "caught" : ""} style={{ "--fly-x": `${8 + ((index * 29) % 84)}%`, "--fly-y": `${12 + ((index * 37) % 64)}%`, "--fly-delay": `${index * -.31}s` } as React.CSSProperties} onClick={() => { if (caughtFireflies.includes(index)) return; haptic(14); setCaughtFireflies((current) => [...current, index]); playNote(index % 8); if (caughtFireflies.length === 9) { haptic([20, 35, 20]); setStars((value) => value + 1); setMessage("You lit the whole garden, Gauri! ★"); } }} aria-label={`Catch glowing light ${index + 1}`}><span>✦</span></button>)}
                 <div className="glow-score">{caughtFireflies.length}<small>/ 10 lights</small></div>
                 {caughtFireflies.length === 10 && <button className="modern-replay" onClick={() => setCaughtFireflies([])}>Play again</button>}
               </div>}
               {toddlerGame === "soundmatch" && <div className="sound-match-world">
                 <img src="./gauri-animal-world.png" alt="Gauri's animal friends waiting in the moonlit garden" />
                 <div className="sound-question"><button onClick={() => playAnimalSound(soundTarget)} aria-label="Play the mystery animal sound">▶</button><span><small>Who called Gauri?</small>Tap the animal</span></div>
-                <div className="match-hotspots">{animals.map((animal, index) => <button key={animal.key} className={activeAnimal === index ? "chosen" : ""} onClick={() => { triggerAnimal(index); if (index === soundTarget) { setStars((value) => value + 1); setMessage(`Yes! ${animalName(index)} called Gauri ★`); window.setTimeout(() => { const next = (soundTarget + 1) % animals.length; setSoundTarget(next); setActiveAnimal(null); setMessage("Listen again. Who is calling?"); playAnimalSound(next); }, 1200); } else setMessage(`That is ${animalName(index)}. Listen again!`); }} aria-label={`Choose ${animal.english}`}><span>{animalName(index)}</span></button>)}</div>
+                <div className="match-hotspots">{animals.map((animal, index) => <button key={animal.key} className={activeAnimal === index ? "chosen" : ""} onClick={() => { haptic(index === soundTarget ? [18, 25, 18] : 12); triggerAnimal(index); if (index === soundTarget) { setStars((value) => value + 1); setMessage(`Yes! ${animalName(index)} called Gauri ★`); window.setTimeout(() => { const next = (soundTarget + 1) % animals.length; setSoundTarget(next); setActiveAnimal(null); setMessage("Listen again. Who is calling?"); playAnimalSound(next); }, 1200); } else setMessage(`That is ${animalName(index)}. Listen again!`); }} aria-label={`Choose ${animal.english}`}><span>{animalName(index)}</span></button>)}</div>
               </div>}
               {toddlerGame === "parade" && <div className="parade-world">
                 <img src="./gauri-animal-world.png" alt="Gauri's animal friends ready for their musical parade" />
                 <img className="parade-gauri" src="./gauri-character.png" alt="Gauri leading the animal parade" />
                 <div className="parade-lane">{animals.map((animal, index) => <button key={animal.key} className={paradeStep % animals.length === index ? "leader" : ""} onClick={() => { playNote(index); setParadeStep(index + 1); setStars((value) => value + (index === paradeStep % animals.length ? 1 : 0)); setMessage(`${animalName(index)} joins Gauri's parade!`); }}><span>{animal.emoji}</span><b>{animalName(index)}</b></button>)}</div>
-                <button className="parade-beat" onClick={() => { const next = paradeStep % animals.length; playNote(next); setParadeStep((value) => value + 1); setMessage(`Boom! ${animalName(next)} marches!`); }}>🥁<span>Next beat</span></button>
+                <button className="parade-beat" onClick={() => { haptic([24, 24, 12]); const next = paradeStep % animals.length; playNote(next); setParadeStep((value) => value + 1); setMessage(`Boom! ${animalName(next)} marches!`); }}>🥁<span>Next beat</span></button>
               </div>}
               {toddlerGame === "smash" && <div
                 className="smash-field"
