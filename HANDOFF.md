@@ -13,7 +13,7 @@ The application has been installed on the development EC2 server and passed HTTP
 - Repository: `https://github.com/niscp/wondertaps`
 - Working branch: `codex/world-class-wondertaps`
 - The same changes were pushed to `main`.
-- Latest known commit: `cca686c` (`Add EC2 static deployment configuration`)
+- Latest product commit: `a7974de` (`Redesign WonderTaps as universal toddler playground`)
 - Local project: `/Users/nishanksingh/Documents/Codex/2026-08-07/i-want-to-build-a-website/wondertaps-worldclass`
 
 Important recent commits:
@@ -42,7 +42,7 @@ The EC2 server also hosts Dwemory and GetMeCab development services. WonderTaps 
 
 - Deployment root: `/var/www/wondertaps`
 - Active symlink: `/var/www/wondertaps/current`
-- Last known active release: `/var/www/wondertaps/releases/f1d4d5c-ec2`
+- Active release: `/var/www/wondertaps/releases/a7974de-ec2`
 - Nginx configuration: `/etc/nginx/conf.d/wondertaps.conf`
 - Repository copy: `deploy/ec2/wondertaps.conf`
 - ACME webroot: `/var/www/certbot`
@@ -171,6 +171,7 @@ Rollback triggers:
 - Supported age groups: 1, 2–3, 4–5, and 6–7 years.
 - The one-year-old mode is deliberately app-like, full-screen, and optimized for 320 px portrait through phone landscape.
 - Cinematic animal artwork is stored in `public/wondertaps-animal-world.png`.
+- Social sharing artwork is stored in `public/og.png`.
 - Animal audio files are stored under `public/sounds/`.
 - Personalization data and recorded praise audio are stored client-side in the browser; there is no application database for the current static site.
 

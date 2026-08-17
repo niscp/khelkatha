@@ -14,7 +14,7 @@ The root-domain static build succeeds and responsive browser checks pass at 320 
 |---|---|---|---|
 | M1 — Product experience | Complete | Hindi, English, and Hinglish; age groups 1, 2–3, 4–5, and 6–7; four Moonlight Meadow activities present in the one-year-old experience | Maintain the universal, animal-led product direction |
 | M2 — EC2 static build | Complete | `DEPLOY_TARGET=ec2 npm run build:pages` succeeds; `out/index.html` contains root-domain `/_next/static/` assets and no `/khelkatha/` base path | Rebuild before the next deployment |
-| M3 — EC2 origin deployment | Complete, update pending | Nginx configuration test passes; homepage, `www` hostname, and compiled CSS asset return HTTP 200 at the origin | Deploy the latest commit as a new release; active release is still `f1d4d5c-ec2` while source is at `cca686c` |
+| M3 — EC2 origin deployment | Complete | Release `a7974de-ec2` is active; Nginx configuration passes; homepage, `www` hostname, and compiled CSS asset return HTTP 200 at the origin | Rebuild and deploy a unique release for future product changes |
 | M4 — Public DNS | Blocked | Independent resolvers return `NXDOMAIN`; WHOIS shows Cloudflare nameservers but domain status is `clientHold` | Complete DomainIndia verification/KYC/payment checks or ask registrar support to remove `clientHold`; then verify NS, A, and CNAME records |
 | M5 — HTTPS and redirects | Blocked | Direct TLS inspection still returns the Dwemory certificate, not a certificate containing `wondertaps.in` | After DNS works, issue the two-host Let's Encrypt certificate, test Nginx, reload, verify both HTTPS hostnames, and run renewal dry-run |
 | M6 — Responsive acceptance | In progress | No horizontal overflow at 320 × 568 or 667 × 375; activity controls remain at least 48 px high; browser console has no errors or warnings during landscape check | Test on a physical 320 px-class phone in portrait and landscape |
@@ -27,9 +27,9 @@ The root-domain static build succeeds and responsive browser checks pass at 320 
 ### Source and release
 
 - Active branch: `codex/world-class-wondertaps`
-- Source commit: `cca686c` (`Add EC2 static deployment configuration`)
-- `origin/main` and `origin/codex/world-class-wondertaps` point to `cca686c`
-- Active EC2 release: `/var/www/wondertaps/releases/f1d4d5c-ec2`
+- Product commit: `a7974de` (`Redesign WonderTaps as universal toddler playground`)
+- `origin/codex/world-class-wondertaps` contains the redesign
+- Active EC2 release: `/var/www/wondertaps/releases/a7974de-ec2`
 - Nginx virtual host: `/etc/nginx/conf.d/wondertaps.conf`
 - Nginx syntax: valid; unrelated existing protocol-option warnings are emitted by Beacon/Pulse configurations
 
@@ -62,9 +62,8 @@ The root-domain static build succeeds and responsive browser checks pass at 320 
 2. Confirm public Cloudflare delegation and the `@`/`www` records.
 3. Confirm public HTTP for both hostnames.
 4. Issue and validate the Let's Encrypt certificate and redirect behavior.
-5. Deploy a fresh release from `cca686c` or the newer quality-fix commit.
-6. Complete physical-phone portrait, landscape, and first-tap audio acceptance.
-7. Run final live smoke tests and mark M9 complete.
+5. Complete physical-phone portrait, landscape, and first-tap audio acceptance.
+6. Run final public-domain smoke tests and mark M9 complete.
 
 ## Launch acceptance checklist
 
