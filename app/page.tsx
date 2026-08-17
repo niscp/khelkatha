@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element -- Static export uses local cinematic art and browser-local family photos. */
+
 import { useCallback, useEffect, useRef, useState } from "react";
 
 type AgeGroup = "1" | "2-3" | "4-5" | "6-7";
@@ -54,7 +56,7 @@ export default function Home() {
   const [birdPosition, setBirdPosition] = useState({ x: 68, y: 42 });
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showFamily, setShowFamily] = useState(false);
-  const [childName, setChildName] = useState("Gauri");
+  const [childName, setChildName] = useState("");
   const [nickname, setNickname] = useState("");
   const [favouriteColour, setFavouriteColour] = useState("#ef6654");
   const [family, setFamily] = useState<FamilyMember[]>([]);
@@ -73,25 +75,28 @@ export default function Home() {
   const recordingChunks = useRef<Blob[]>([]);
 
   useEffect(() => {
-    const savedLanguage = window.localStorage.getItem("wondertaps-language") as Language | null;
-    if (savedLanguage && savedLanguage in copy) setLanguage(savedLanguage);
-    const saved = (window.localStorage.getItem("wondertaps-age") || window.localStorage.getItem("khelkatha-age")) as AgeGroup | null;
-    if (saved && saved in ageOptions) {
-      setAge(saved);
-      if (saved === "1") {
-        setToddlerGame("show");
-        setMessage("Gauri & friends are ready!");
+    const restore = window.requestAnimationFrame(() => {
+      const savedLanguage = window.localStorage.getItem("wondertaps-language") as Language | null;
+      if (savedLanguage && savedLanguage in copy) setLanguage(savedLanguage);
+      const saved = (window.localStorage.getItem("wondertaps-age") || window.localStorage.getItem("khelkatha-age")) as AgeGroup | null;
+      if (saved && saved in ageOptions) {
+        setAge(saved);
+        if (saved === "1") {
+          setToddlerGame("show");
+          setMessage("Your animal friends are ready!");
+        }
       }
-    }
-    else setShowAge(true);
-    try {
-      const profile = JSON.parse(window.localStorage.getItem("wondertaps-family") || window.localStorage.getItem("khelkatha-family") || "null");
-      if (profile) {
-        setChildName(profile.childName || "Gauri"); setNickname(profile.nickname || "");
-        setFavouriteColour(profile.favouriteColour || "#ef6654"); setFamily(profile.family || []);
-        setPraiseAudio(profile.praiseAudio || "");
-      }
-    } catch { /* start with an empty private profile */ }
+      else setShowAge(true);
+      try {
+        const profile = JSON.parse(window.localStorage.getItem("wondertaps-family") || window.localStorage.getItem("khelkatha-family") || "null");
+        if (profile) {
+          setChildName(profile.childName || ""); setNickname(profile.nickname || "");
+          setFavouriteColour(profile.favouriteColour || "#ef6654"); setFamily(profile.family || []);
+          setPraiseAudio(profile.praiseAudio || "");
+        }
+      } catch { /* start with an empty private profile */ }
+    });
+    return () => window.cancelAnimationFrame(restore);
   }, []);
 
   const words = copy[language];
@@ -100,8 +105,11 @@ export default function Home() {
   function chooseLanguage(value: Language) {
     setLanguage(value);
     window.localStorage.setItem("wondertaps-language", value);
-    document.documentElement.lang = value === "hinglish" ? "en-IN" : value;
   }
+
+  useEffect(() => {
+    document.documentElement.lang = language === "hinglish" ? "en-IN" : language;
+  }, [language]);
 
   useEffect(() => {
     const syncFullscreen = () => setIsFullscreen(Boolean(document.fullscreenElement));
@@ -154,9 +162,9 @@ export default function Home() {
   useEffect(() => {
     if (!showPlaying || toddlerGame !== "show") return;
     let index = 0;
-    triggerAnimal(index);
+    const opening = window.setTimeout(() => triggerAnimal(index), 0);
     const timer = window.setInterval(() => { index = (index + 1) % animals.length; triggerAnimal(index); }, 2100);
-    return () => window.clearInterval(timer);
+    return () => { window.clearTimeout(opening); window.clearInterval(timer); };
   }, [showPlaying, toddlerGame, triggerAnimal]);
 
   useEffect(() => {
@@ -184,7 +192,7 @@ export default function Home() {
     setShowAge(false);
     setMode(value === "1" ? "free" : "challenge");
     setToddlerGame(value === "1" ? "show" : "smash");
-    setMessage(value === "1" ? "Gauri & friends are ready!" : `${animals[challenge].sound} कौन बोलता है?`);
+    setMessage(value === "1" ? "Your animal friends are ready!" : `${animals[challenge].sound} कौन बोलता है?`);
     window.localStorage.setItem("wondertaps-age", value);
   }
 
@@ -198,7 +206,7 @@ export default function Home() {
     setActiveAnimal(null);
     setRevealed(null);
     const prompts: Record<ToddlerGame, string> = {
-      show: "Gauri का Animal Show!", fireflies: "Gauri, catch the glowing lights!", soundmatch: "Listen. Who is calling Gauri?", parade: "Tap to lead Gauri's parade!", smash: "कहीं भी छूओ!", bubbles: "बुलबुले फोड़ो!", ball: "गेंद को घुमाओ!",
+      show: "Tap an animal to begin!", fireflies: "Catch the glowing lights!", soundmatch: "Listen. Who is calling?", parade: "Tap to lead the rhythm parade!", smash: "कहीं भी छूओ!", bubbles: "बुलबुले फोड़ो!", ball: "गेंद को घुमाओ!",
       scratch: "उंगली घुमाओ!", piano: "सुर बजाओ!", catch: "तोता पकड़ो!", family: "कौन छुपा है?",
       hello: "जानवर को छूओ!", peek: "पत्ते के पीछे कौन है?", dance: "किसको नचाएँ?",
     };
@@ -206,8 +214,8 @@ export default function Home() {
     if (value === "soundmatch") window.setTimeout(() => playAnimalSound(soundTarget), 250);
   }
 
-  async function startCharacterShow() {
-    setToddlerGame("show"); setShowPlaying(true); setMessage(`${nickname || childName || "Gauri"}, your animal friends are here!`);
+  async function startAnimalShow() {
+    setToddlerGame("show"); setShowPlaying(true); setMessage("The moonlight animal show is starting!");
     try { if (!document.fullscreenElement) await document.documentElement.requestFullscreen({ navigationUI: "hide" }); } catch { /* show still plays inline */ }
   }
 
@@ -305,7 +313,7 @@ export default function Home() {
         <div className="lab-intro">
           <div>
             <span className="eyebrow">{age === "1" ? words.littleHands : words.orchestra}</span>
-            <h1>{age === "1" ? <>{nickname || childName || "Gauri"}, this is<br /><em>your wonder world!</em></> : words.olderTitle}</h1>
+            <h1>{age === "1" ? <>A little world of<br /><em>big wonder.</em></> : words.olderTitle}</h1>
           </div>
           {age !== "1" && <div className="mode-switch" aria-label="Choose play mode">
             <button className={mode === "free" ? "active" : ""} onClick={() => changeMode("free")}>🎹 {words.freePlay}</button>
@@ -316,38 +324,37 @@ export default function Home() {
         {age === "1" ? (
           <div className="toddler-world">
             <nav className="toddler-games" aria-label="Games for one year olds">
-              <button aria-label="Gauri's Show" className={`character-show-tab ${toddlerGame === "show" ? "active" : ""}`} onClick={startCharacterShow}><span>🎬</span><b>Gauri</b></button>
-              <button aria-label="Glow Garden" className={toddlerGame === "fireflies" ? "active" : ""} onClick={() => chooseToddlerGame("fireflies")}><span>🌟</span><b>Glow</b></button>
-              <button aria-label="Who Called?" className={toddlerGame === "soundmatch" ? "active" : ""} onClick={() => chooseToddlerGame("soundmatch")}><span>👂</span><b>Listen</b></button>
-              <button aria-label="Animal Parade" className={toddlerGame === "parade" ? "active" : ""} onClick={() => chooseToddlerGame("parade")}><span>🥁</span><b>Parade</b></button>
+              <button aria-label="Moonlight Animal Safari" className={`character-show-tab ${toddlerGame === "show" ? "active" : ""}`} onClick={startAnimalShow}><span>🌙</span><b>Safari</b></button>
+              <button aria-label="Firefly Garden" className={toddlerGame === "fireflies" ? "active" : ""} onClick={() => chooseToddlerGame("fireflies")}><span>✨</span><b>Fireflies</b></button>
+              <button aria-label="Who is Calling?" className={toddlerGame === "soundmatch" ? "active" : ""} onClick={() => chooseToddlerGame("soundmatch")}><span>👂</span><b>Who?</b></button>
+              <button aria-label="Rhythm Parade" className={toddlerGame === "parade" ? "active" : ""} onClick={() => chooseToddlerGame("parade")}><span>🥁</span><b>Band</b></button>
               {family.some((member) => member?.photo) && <button className={toddlerGame === "family" ? "active" : ""} onClick={() => chooseToddlerGame("family")}><span>👪</span><b>{words.myFamily}</b></button>}
             </nav>
 
             <div className={`toddler-card game-${toddlerGame}`}>
               <div className="toddler-prompt" role="status">{message}</div>
               {toddlerGame === "show" && <div className="character-cinema">
-                <img className="cinema-world" src="./gauri-animal-world.png" alt="Gauri's horse, elephant, lion, monkey, cow and parrot friends in a magical garden" />
-                <div className="cinema-title"><small>Now playing</small><b>Gauri &amp; friends</b></div>
-                <button className="gauri-host" onClick={() => { haptic([18, 30, 18]); setMessage("Hi Gauri! Chalo animals ke saath khelein!"); playPraise(); }} aria-label="Gauri, host of the animal show"><img src="./gauri-character.png" alt="Cartoon Gauri waving and hosting her animal show" /><b>Gauri</b></button>
-                <div className="cinema-cast">{animals.map((animal, index) => <button key={animal.key} className={activeAnimal === index ? "star" : ""} onClick={() => triggerAnimal(index)} style={{ "--cast-colour": animal.colour, "--cast-delay": `${index * .12}s` } as React.CSSProperties}><span>{animal.emoji}</span><b>{animalName(index)}</b></button>)}</div>
-                <button className="show-control" onClick={() => setShowPlaying((value) => !value)}>{showPlaying ? "⏸ Pause show" : "▶ Play full show"}</button>
+                <img className="cinema-world" src="./wondertaps-animal-world.png" alt="A horse, elephant, lion, monkey, cow and parrot together in a magical moonlit meadow" />
+                <div className="cinema-aurora" aria-hidden="true" />
+                <div className="cinema-title"><small>WonderTaps presents</small><b>Moonlight Meadow</b><span>Tap a friend. Hear them come alive.</span></div>
+                <div className="cinema-cast">{animals.map((animal, index) => <button key={animal.key} aria-label={`Hear ${animal.english}`} className={activeAnimal === index ? "star" : ""} onClick={() => triggerAnimal(index)} style={{ "--cast-colour": animal.colour, "--cast-delay": `${index * .12}s` } as React.CSSProperties}><span>{animal.emoji}</span><b>{animalName(index)}</b></button>)}</div>
+                <div className="tap-ripple" key={pulse} aria-hidden="true">✦</div>
+                <button className="show-control" onClick={() => setShowPlaying((value) => !value)}>{showPlaying ? "⏸ Pause" : "▶ Meet everyone"}</button>
               </div>}
               {toddlerGame === "fireflies" && <div className="firefly-garden">
-                <img src="./gauri-animal-world.png" alt="Magical garden with Gauri's animal friends" />
-                <img className="mini-gauri" src="./gauri-character.png" alt="Gauri catching glowing fireflies" />
-                {Array.from({ length: 10 }).map((_, index) => <button key={index} className={caughtFireflies.includes(index) ? "caught" : ""} style={{ "--fly-x": `${8 + ((index * 29) % 84)}%`, "--fly-y": `${12 + ((index * 37) % 64)}%`, "--fly-delay": `${index * -.31}s` } as React.CSSProperties} onClick={() => { if (caughtFireflies.includes(index)) return; haptic(14); setCaughtFireflies((current) => [...current, index]); playNote(index % 8); if (caughtFireflies.length === 9) { haptic([20, 35, 20]); setStars((value) => value + 1); setMessage("You lit the whole garden, Gauri! ★"); } }} aria-label={`Catch glowing light ${index + 1}`}><span>✦</span></button>)}
+                <img src="./wondertaps-animal-world.png" alt="Animal friends in a magical firefly garden" />
+                {Array.from({ length: 10 }).map((_, index) => <button key={index} className={caughtFireflies.includes(index) ? "caught" : ""} style={{ "--fly-x": `${8 + ((index * 29) % 84)}%`, "--fly-y": `${12 + ((index * 37) % 64)}%`, "--fly-delay": `${index * -.31}s` } as React.CSSProperties} onClick={() => { if (caughtFireflies.includes(index)) return; haptic(14); setCaughtFireflies((current) => [...current, index]); playNote(index % 8); if (caughtFireflies.length === 9) { haptic([20, 35, 20]); setStars((value) => value + 1); setMessage("You lit the whole garden! ★"); } }} aria-label={`Catch glowing light ${index + 1}`}><span>✦</span></button>)}
                 <div className="glow-score">{caughtFireflies.length}<small>/ 10 lights</small></div>
                 {caughtFireflies.length === 10 && <button className="modern-replay" onClick={() => setCaughtFireflies([])}>Play again</button>}
               </div>}
               {toddlerGame === "soundmatch" && <div className="sound-match-world">
-                <img src="./gauri-animal-world.png" alt="Gauri's animal friends waiting in the moonlit garden" />
-                <div className="sound-question"><button onClick={() => playAnimalSound(soundTarget)} aria-label="Play the mystery animal sound">▶</button><span><small>Who called Gauri?</small>Tap the animal</span></div>
-                <div className="match-hotspots">{animals.map((animal, index) => <button key={animal.key} className={activeAnimal === index ? "chosen" : ""} onClick={() => { haptic(index === soundTarget ? [18, 25, 18] : 12); triggerAnimal(index); if (index === soundTarget) { setStars((value) => value + 1); setMessage(`Yes! ${animalName(index)} called Gauri ★`); window.setTimeout(() => { const next = (soundTarget + 1) % animals.length; setSoundTarget(next); setActiveAnimal(null); setMessage("Listen again. Who is calling?"); playAnimalSound(next); }, 1200); } else setMessage(`That is ${animalName(index)}. Listen again!`); }} aria-label={`Choose ${animal.english}`}><span>{animalName(index)}</span></button>)}</div>
+                <img src="./wondertaps-animal-world.png" alt="Animal friends waiting in the moonlit meadow" />
+                <div className="sound-question"><button onClick={() => playAnimalSound(soundTarget)} aria-label="Play the mystery animal sound">▶</button><span><small>Who is calling?</small>Tap the animal</span></div>
+                <div className="match-hotspots">{animals.map((animal, index) => <button key={animal.key} className={activeAnimal === index ? "chosen" : ""} onClick={() => { haptic(index === soundTarget ? [18, 25, 18] : 12); triggerAnimal(index); if (index === soundTarget) { setStars((value) => value + 1); setMessage(`Yes! It was ${animalName(index)} ★`); window.setTimeout(() => { const next = (soundTarget + 1) % animals.length; setSoundTarget(next); setActiveAnimal(null); setMessage("Listen again. Who is calling?"); playAnimalSound(next); }, 1200); } else setMessage(`That is ${animalName(index)}. Listen again!`); }} aria-label={`Choose ${animal.english}`}><span>{animalName(index)}</span></button>)}</div>
               </div>}
               {toddlerGame === "parade" && <div className="parade-world">
-                <img src="./gauri-animal-world.png" alt="Gauri's animal friends ready for their musical parade" />
-                <img className="parade-gauri" src="./gauri-character.png" alt="Gauri leading the animal parade" />
-                <div className="parade-lane">{animals.map((animal, index) => <button key={animal.key} className={paradeStep % animals.length === index ? "leader" : ""} onClick={() => { playNote(index); setParadeStep(index + 1); setStars((value) => value + (index === paradeStep % animals.length ? 1 : 0)); setMessage(`${animalName(index)} joins Gauri's parade!`); }}><span>{animal.emoji}</span><b>{animalName(index)}</b></button>)}</div>
+                <img src="./wondertaps-animal-world.png" alt="Animal friends ready for their musical parade" />
+                <div className="parade-lane">{animals.map((animal, index) => <button key={animal.key} className={paradeStep % animals.length === index ? "leader" : ""} onClick={() => { playNote(index); setParadeStep(index + 1); setStars((value) => value + (index === paradeStep % animals.length ? 1 : 0)); setMessage(`${animalName(index)} joins the band!`); }}><span>{animal.emoji}</span><b>{animalName(index)}</b></button>)}</div>
                 <button className="parade-beat" onClick={() => { haptic([24, 24, 12]); const next = paradeStep % animals.length; playNote(next); setParadeStep((value) => value + 1); setMessage(`Boom! ${animalName(next)} marches!`); }}>🥁<span>Next beat</span></button>
               </div>}
               {toddlerGame === "smash" && <div
@@ -492,11 +499,11 @@ export default function Home() {
       {showFamily && <div className="family-overlay" role="dialog" aria-modal="true" aria-labelledby="family-title">
         <div className="family-dialog">
           <button className="family-close" onClick={() => setShowFamily(false)} aria-label="Close family setup">✕</button>
-          <span className="eyebrow">Private parent setup</span><h2 id="family-title">Make it hers</h2>
+          <span className="eyebrow">Private parent setup</span><h2 id="family-title">Make it familiar</h2>
           <p>Everything stays in this browser on this device.</p>
-          <div className="profile-fields"><label>Daughter&apos;s name<input value={childName} onChange={(event) => setChildName(event.target.value)} placeholder="Name" /></label><label>Nickname<input value={nickname} onChange={(event) => setNickname(event.target.value)} placeholder="Gudiya" /></label><label>Favourite colour<input type="color" value={favouriteColour} onChange={(event) => setFavouriteColour(event.target.value)} /></label></div>
+          <div className="profile-fields"><label>Child&apos;s name<input value={childName} onChange={(event) => setChildName(event.target.value)} placeholder="Name" /></label><label>Nickname<input value={nickname} onChange={(event) => setNickname(event.target.value)} placeholder="Little star" /></label><label>Favourite colour<input type="color" value={favouriteColour} onChange={(event) => setFavouriteColour(event.target.value)} /></label></div>
           <h3>Family faces <small>up to 3</small></h3><div className="family-slots">{[0,1,2].map((index) => <div key={index}>{family[index]?.photo ? <img src={family[index].photo} alt="Family preview" /> : <span>📷</span>}<input value={family[index]?.name || ""} onChange={(event) => setFamily((current) => { const next=[...current]; next[index]={ name:event.target.value, photo:next[index]?.photo || "" }; return next; })} placeholder="Mumma / Nani" /><label className="photo-pick">Choose photo<input type="file" accept="image/*" onChange={(event) => addFamilyPhoto(event.target.files?.[0], index)} /></label></div>)}</div>
-          <div className="voice-setup"><div><b>Family praise</b><small>Record “Shabash!” or her favourite phrase (5 sec)</small></div><button className={isRecording ? "recording" : ""} onClick={toggleRecording}>{isRecording ? "■ Stop" : "● Record"}</button>{praiseAudio && <button onClick={playPraise}>▶ Play</button>}</div>
+          <div className="voice-setup"><div><b>Family praise</b><small>Record “Shabash!” or a favourite phrase (5 sec)</small></div><button className={isRecording ? "recording" : ""} onClick={toggleRecording}>{isRecording ? "■ Stop" : "● Record"}</button>{praiseAudio && <button onClick={playPraise}>▶ Play</button>}</div>
           <button className="save-family" onClick={saveFamily}>Save Family Mode</button>
         </div>
       </div>}
